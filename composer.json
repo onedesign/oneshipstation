@@ -1,0 +1,16 @@
+{
+    "name": "onedesign/oneshipstation",
+    "description": "A Craft CMS plugin for integrating Craft Commerce with ShipStation",
+    "homepage": "https://github.com/onedesign/oneshipstation",
+    "type": "craft-plugin",
+    "keywords": ["craft","plugin"],
+    "license": "MIT",
+    "authors": [{
+        "name": "One Design Company",
+        "email": "dev+oneshipstation@onedesigncompany.com",
+        "homepage": "https://onedesigncompany.com"
+    }],
+    "require": {
+        "composer/installers": "~1.0"
+    }
+}
