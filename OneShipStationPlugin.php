@@ -49,8 +49,20 @@ class OneShipStationPlugin extends BasePlugin {
 
     public function dropTables() {}
 
-    public function registerSiteRoutes() {
-        return array();
-    }
+    /*
+     * WARNING: Do not register any routes that ShipStation will use here.
+     *          ShipStation sends a parameter `action` with every request, which collides with
+     *          Craft's action request handling. Therefore, any request from ShipStation MUST
+     *          be routed as an action request using the actionTrigger defined in config/general (default: "actions").
+     *
+     *          `_checkRequestType()` in craft/app/services/HttpRequestService.php determines the request type in this order:
+     *
+     *          1. the first URL segment matches config's actionTrigger
+     *          2. the GET or POST param `action` is set at not null
+     *          3. the request is a special path
+     *
+     *          If any of these are true, Craft handles routing and never checks for plugins' registerSiteRoutes()
+     */
+    public function registerSiteRoutes() { return []; }
 
 }
