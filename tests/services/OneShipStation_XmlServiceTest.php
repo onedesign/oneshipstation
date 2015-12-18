@@ -9,6 +9,36 @@ class OneShipStation_XmlServiceTest extends BaseTest
         craft()->plugins->loadPlugins();
     }
 
+    public function testModelMappingByFieldNameReturnsCorrectFieldValue() {
+        $object = new \StdClass();
+        $object->local_key = md5(time());
+
+        $cdata_method = $this->getMethod(craft()->oneShipStation_xml, 'valueFromMappingAndModel');
+        $returned_value = $cdata_method->invoke(craft()->oneShipStation_xml, 'local_key', $object);
+
+        $this->assertEquals($returned_value, '<![CDATA[' . $object->local_key . ']]>');
+    }
+
+    public function testModelMappingByHashReturnsCorrectFieldValue() {
+        $object = new \StdClass();
+        $object->local_key = md5(time());
+
+        $cdata_method = $this->getMethod(craft()->oneShipStation_xml, 'valueFromMappingAndModel');
+        $returned_value = $cdata_method->invoke(craft()->oneShipStation_xml, ['field' => 'local_key'], $object);
+
+        $this->assertEquals($returned_value, '<![CDATA[' . $object->local_key . ']]>');
+    }
+
+    public function testModelMappingWithNoCDATAReturnsCorrectFieldValue() {
+        $object = new \StdClass();
+        $object->local_key = md5(time());
+
+        $cdata_method = $this->getMethod(craft()->oneShipStation_xml, 'valueFromMappingAndModel');
+        $returned_value = $cdata_method->invoke(craft()->oneShipStation_xml, ['cdata' => false, 'field' => 'local_key'], $object);
+
+        $this->assertEquals($returned_value, $object->local_key);
+    }
+
     public function testCDATAFormatWithStrings() {
         $test_value = "here is the test value with <special>[]' characters>>!";
 

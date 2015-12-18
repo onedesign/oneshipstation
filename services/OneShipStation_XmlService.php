@@ -32,7 +32,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $order_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
         $order_mapping = ['OrderID'     => 'id',
-                          'OrderNumber' => 'id',
+                          'OrderNumber' => 'number',
                           'OrderTotal'  => ['field' => 'totalPrice',
                                             'cdata' => false], //TODO confirm
          ];
@@ -132,7 +132,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         }
 
         //wrap in cdata unless explicitly set not to
-        if (!array_key_exists('cdata', $options) || $options['cdata']) {
+        if (!is_array($options) || !array_key_exists('cdata', $options) || $options['cdata']) {
             $value = $this->cdata($value);
         }
         return $value;
