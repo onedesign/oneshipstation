@@ -39,6 +39,7 @@ class Oneshipstation_OrdersController extends BaseController
      * Note: this should probably get orders using Craft Commerce's variable/service if possible
      */
     protected function getOrders() {
+        //TODO this should use orders retrieved as the result of #110269820
         $orders = craft()->elements->getCriteria('Commerce_Order');
 
         $parent_xml = new \SimpleXMLElement('<Orders />');
