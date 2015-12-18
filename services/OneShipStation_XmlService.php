@@ -119,15 +119,23 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      */
     protected function valueFromMappingAndModel($options, $model) {
         $value = null;
+
+        //if field name exists in the options array
         if (is_array($options) && array_key_exists('field', $options)) {
             $field = $options['field'];
             $value = $model->{$field};
-        } else if (is_array($options) && array_key_exists('callback', $options)) {
+        }
+        //if value is coming from a callback in the options array
+        else if (is_array($options) && array_key_exists('callback', $options)) {
             $callback = $options['callback'];
             $value = $callback($model);
-        } else if (is_object($options) && is_callable($options)) {
+        }
+        //if value is a callback
+        else if (is_object($options) && is_callable($options)) {
             $value = $options($model);
-        } else if (!is_array($options)) {
+        }
+        //if value is an attribute on the model, passed as a string field name
+        else if (!is_array($options)) {
             $value = $model->{$options};
         }
 
