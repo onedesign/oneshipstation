@@ -55,14 +55,14 @@ class Oneshipstation_OrdersController extends BaseController
         return true;
     }
 
-	/**
-	 * Responds to the request with XML.
+    /**
+     * Responds to the request with XML.
      *
      * See craft/app/controllers/BaseController.php#returnJson() for comparisons
-	 *
-	 * @param SimpleXMLElement $xml
-	 * @return null
-	 */
+     *
+     * @param SimpleXMLElement $xml
+     * @return null
+     */
     protected function returnXML(\SimpleXMLElement $xml) {
         HeaderHelper::setContentTypeByExtension('xml');
         // Output it into a buffer, in case TasksService wants to close the connection prematurely
