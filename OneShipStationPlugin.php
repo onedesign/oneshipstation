@@ -65,4 +65,17 @@ class OneShipStationPlugin extends BasePlugin {
      */
     public function registerSiteRoutes() { return []; }
 
+    protected function defineSettings() {
+        return array(
+            'oneshipstation_username' => array(AttributeType::String),
+            'oneshipstation_password' => array(AttributeType::String)
+        );
+    }
+
+    public function getSettingsHtml() {
+        return craft()->templates->render('oneshipstation/settings', array(
+            'settings' => $this->getSettings()
+        ));
+
+    }
 }
