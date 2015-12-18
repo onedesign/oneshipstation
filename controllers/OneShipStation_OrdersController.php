@@ -24,18 +24,29 @@ class Oneshipstation_OrdersController extends BaseController
         }
     }
 
-    private function authenticate() {
+    /**
+     * Authenticate the user using HTTP Basic auth. This is NOT using Craft's sessions/authentication.
+     *
+     * @return bool, true if successfully authenticated or false otherwise
+     */
+    protected function authenticate() {
         //TODO
         return true;
     }
 
+    /**
+     * Renders a big XML file of all orders in a format described by ShipStation
+     */
     protected function getOrders() {
         //TODO
-        echo 'getting orders';exit();
+        return true;
     }
 
+    /**
+     * Updates order status for a given order, as posted here by ShipStation
+     */
     protected function postShipment() {
         //TODO
-        echo 'posting shipment';exit();
+        return true;
     }
 }

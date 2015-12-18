@@ -23,6 +23,17 @@ Add OneShipStation to your `composer.json` file:
 
 Then run `composer install`. Go to the Craft Control Panel to install and configure.
 
+## Testing
+
+Run tests using PHPUnit, as installed using composer.
+
+```
+$ composer update --dev
+$ vendor/bin/phpunit tests/
+```
+
+Note that running a version of phpunit installed elsewhere in your `$PATH` may break. So use the one installed in the `vendor/bin/` directory.
+
 ## Development
 
 On any Craft project, navigate to `craft/plugins` and clone the repository:
