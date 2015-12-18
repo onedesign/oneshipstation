@@ -10,7 +10,16 @@
         "email": "dev+oneshipstation@onedesigncompany.com",
         "homepage": "https://onedesigncompany.com"
     }],
+    "autoload": {
+        "classmap": [
+            "controllers"
+        ]
+    },
     "require": {
         "composer/installers": "~1.0"
+    },
+    "require-dev": {
+        "mockery/mockery": "~0.8",
+        "phpunit/phpunit": "~5.0"
     }
 }
