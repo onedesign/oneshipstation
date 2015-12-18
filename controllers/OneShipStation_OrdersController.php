@@ -24,7 +24,7 @@ class Oneshipstation_OrdersController extends BaseController
         }
     }
 
-    private function authenticate() {
+    protected function authenticate() {
         //TODO
         return true;
     }
