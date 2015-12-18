@@ -65,10 +65,10 @@ class Oneshipstation_OrdersController extends BaseController
 	 */
     protected function returnXML(\SimpleXMLElement $xml) {
         HeaderHelper::setContentTypeByExtension('xml');
-		// Output it into a buffer, in case TasksService wants to close the connection prematurely
-		ob_start();
+        // Output it into a buffer, in case TasksService wants to close the connection prematurely
+        ob_start();
         echo $xml->asXML();
 
-		craft()->end();
+        craft()->end();
     }
 }
