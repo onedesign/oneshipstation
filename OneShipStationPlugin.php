@@ -76,6 +76,5 @@ class OneShipStationPlugin extends BasePlugin {
         return craft()->templates->render('oneshipstation/settings', array(
             'settings' => $this->getSettings()
         ));
-
     }
 }
