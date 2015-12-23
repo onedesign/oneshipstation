@@ -31,18 +31,108 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function order(\SimpleXMLElement $xml, Commerce_OrderModel $order, $name='Order') {
         $order_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $order_mapping = ['OrderID'     => 'id',
-                          'OrderNumber' => 'number',
-                          'OrderTotal'  => ['field' => 'totalPrice',
-                                            'cdata' => false], //TODO confirm
-         ];
+        $order_mapping = ['OrderID'         => 'id',
+                          'OrderNumber'     => 'number',
+                          'ShippingMethod'  => 'shippingMethodhandle',
+                          'PaymentMethod'   => 'paymentMethodId',
+                          'OrderTotal'      => ['field' => 'totalPrice',
+                                                'cdata' => false],
+                          'TaxAmount'       => ['field' => 'totalTax',
+                                                'cdata' => false],
+                          'ShippingAmount'  => ['field' => 'totalShippingCost',
+                                                'cdata' => false],
+                          'CustomerNotes'   => 'adjustments',
+                          'CustomField1'    => 'couponCode'
+        ];
         $this->mapCraftModel($order_xml, $order_mapping, $order);
+
+        $item_xml = $this->items($order_xml, $order->getLineItems());
 
         $customer_xml = $this->customer($order_xml, $order->getCustomer());
         $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
         $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
 
         return $order_xml;
+    }
+
+    /**
+     * Build an XML document given an array of items
+     *
+     * @param SimpleXMLElement $xml the xml to add a child to or modify
+     * @param [Commerce_LineItemModel] $items
+     * @param String $name the name of the child node, default 'Items'
+     * @return SimpleXMLElement
+     */
+    public function items(\SimpleXMLElement $xml, $items, $name='Items') {
+        $items_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
+        foreach ($items as $item) {
+            $this->item($items_xml, $item);
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Build an XML document given a Commerce_LineItemModel instance
+     *
+     * @param SimpleXMLElement $xml the xml to add a child to or modify
+     * @param Commerce_LineItemModel $item
+     * @param String $name the name of the child node, default 'Item'
+     * @return SimpleXMLElement
+     */
+    public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $name='Item') {
+        $item_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
+
+        $item_mapping = ['LineItemID'       => 'id',
+                         'Name'             => 'description',
+                         'Weight'           => ['field' => 'weight',
+                                                'cdata' => false],
+                         'Quantity'         => ['field' => 'qty',
+                                                'cdata' => false],
+                         'UnitPrice'        => ['field' => 'price',
+                                                'cdata' => false]
+
+        ];
+        $this->mapCraftModel($item_xml, $item_mapping, $item);
+ 
+        // TODO locate options
+        #$option_xml = $this->options($item_xml, $item->getOptions());
+
+        return $item_xml;
+    }
+
+    /**
+     * Build an XML document given an array of options
+     *
+     * @param SimpleXMLElement $xml the xml to add a child to or modify
+     * @param [Commerce_OrderAdjustmentModel] $options
+     * @param String $name the name of the child node, default 'Options'
+     * @return SimpleXMLElement
+     */
+    public function options(\SimpleXMLElement $xml, $options, $name='Options') {
+        $options_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
+        foreach ($options as $option) {
+            $this->option($options_xml, $option);
+        }
+
+        return $xml;
+    }
+
+    /**
+     * Build an XML document given a Commerce_OrderAdjustmentModel instance
+     *
+     * @param SimpleXMLElement $xml the xml to add a child to or modify
+     * @param Commerce_OrderAdjustmentModel $option
+     * @param String $name the name of the child node, default 'Option'
+     * @return SimpleXMLElement
+     */
+    public function option(\SimpleXMLElement $xml, Commerce_OrderAdjustmentModel $option, $name='Option') {
+        $option_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
+
+        $option_mapping = [];
+        $this->mapCraftModel($option_xml, $option_mapping, $option);
+
+        return $option_xml;
     }
 
     /**
@@ -56,7 +146,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function customer(\SimpleXMLElement $xml, Commerce_CustomerModel $customer, $name='Customer') {
         $customer_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $customer_mapping = ['CustomerCode' => 'id'];
+        $customer_mapping = ['CustomerCode' => 'id',
+                             'Email'        => 'email'];
         $this->mapCraftModel($customer_xml, $customer_mapping, $customer);
 
         return $customer_xml;
@@ -75,7 +166,15 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         if (!is_null($address)) {
             $address_mapping = ['Name'    => function($address) { return "{$address->firstName} {$address->lastName}"; },
-                                'Company' => 'businessName'];
+                                'Company' => 'businessName',
+                                'Phone'   => 'phone',
+                                'Address1'=> 'address1',
+                                'Address2'=> 'address2',
+                                'City'    => 'city',
+                                'State'   => 'stateText',
+                                'PostalCode' => 'zipCode',
+                                'Country'    => 'countryText'
+            ];
             $this->mapCraftModel($address_xml, $address_mapping, $address);
         }
 
