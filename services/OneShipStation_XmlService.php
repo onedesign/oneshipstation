@@ -31,17 +31,25 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function order(\SimpleXMLElement $xml, Commerce_OrderModel $order, $name='Order') {
         $order_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $order_mapping = ['OrderID'         => 'id',
-                          'OrderNumber'     => 'number',
+        $order_mapping = ['OrderID'         => ['field' => 'id',
+                                                'cdata' => false],
+                          'OrderNumber'     => ['field' => 'number',
+                                                'cdata' => false],
+                          'OrderDate'       => ['field' => 'dateOrdered',
+                                                'cdata' => false],
+                          'OrderStatus'     => ['field' => 'orderStatusId',
+                                                'cdata' => false],
+                          'LastModified'    => ['field' => 'datePaid',
+                                                'cdata' => false],
                           'ShippingMethod'  => 'shippingMethodhandle',
-                          'PaymentMethod'   => 'paymentMethodId',
+                          'PaymentMethod'   => ['field' => 'paymentMethodId',
+                                                'cdata' => false],
                           'OrderTotal'      => ['field' => 'totalPrice',
                                                 'cdata' => false],
                           'TaxAmount'       => ['field' => 'totalTax',
                                                 'cdata' => false],
                           'ShippingAmount'  => ['field' => 'totalShippingCost',
                                                 'cdata' => false],
-                          'CustomerNotes'   => 'adjustments',
                           'CustomField1'    => 'couponCode'
         ];
         $this->mapCraftModel($order_xml, $order_mapping, $order);
@@ -83,7 +91,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $name='Item') {
         $item_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $item_mapping = ['LineItemID'       => 'id',
+        $item_mapping = ['LineItemID'       => ['field' => 'id',
+                                                'cdata' => false],
+                         'SKU'              => 'optionsSignature',
                          'Name'             => 'description',
                          'Weight'           => ['field' => 'weight',
                                                 'cdata' => false],
@@ -91,7 +101,6 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                                                 'cdata' => false],
                          'UnitPrice'        => ['field' => 'price',
                                                 'cdata' => false]
-
         ];
         $this->mapCraftModel($item_xml, $item_mapping, $item);
  
@@ -165,13 +174,13 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $address_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
         if (!is_null($address)) {
-            $address_mapping = ['Name'    => function($address) { return "{$address->firstName} {$address->lastName}"; },
-                                'Company' => 'businessName',
-                                'Phone'   => 'phone',
-                                'Address1'=> 'address1',
-                                'Address2'=> 'address2',
-                                'City'    => 'city',
-                                'State'   => 'stateText',
+            $address_mapping = ['Name'       => function($address) { return "{$address->firstName} {$address->lastName}"; },
+                                'Company'    => 'businessName',
+                                'Phone'      => 'phone',
+                                'Address1'   => 'address1',
+                                'Address2'   => 'address2',
+                                'City'       => 'city',
+                                'State'      => 'stateText',
                                 'PostalCode' => 'zipCode',
                                 'Country'    => 'countryText'
             ];
