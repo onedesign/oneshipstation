@@ -50,10 +50,67 @@ class Oneshipstation_OrdersController extends BaseController
     }
 
     /**
-     * Updates order status for a given order, as posted here by ShipStation
+     * Updates order status for a given order, as posted here by ShipStation.
+     * The order is found using GET param order_number.
+     *
+     * See craft/plugins/commerce/controllers/Commerce_OrdersController.php#actionUpdateStatus() for details
+     *
+     * @throws ErrorException if the order fails to save
      */
     protected function postShipment() {
-        //TODO
-        return true;
+        $order = $this->orderFromParams();
+
+        $status = craft()->commerce_orderStatuses->getOrderStatusByHandle('shipped');
+        if (!$status) { throw new ErrorException(); }
+
+        $message = $this->orderStatusMessageFromShipstationParams();
+
+        $order->orderStatusId = $status->id;
+        $order->message = $message;
+
+        if (craft()->commerce_orders->saveOrder($order)) {
+            $this->returnJson(['success' => true]); //TODO return 200 success
+        } else {
+            throw new ErrorException('Failed to save order');
+        }
+    }
+
+    /**
+     * Craft Commerce stores a message along with all Order Status changes.
+     * We'll leverage that to store the carrier, service, and tracking number sent to us from ShipStation.
+     *
+     * In the future we may prefer this to be rendered in a template, or even stored in another variable.
+     *
+     * @return String
+     */
+    protected function orderStatusMessageFromShipstationParams() {
+        $carrier = craft()->request->getParam('carrier');
+        $service = craft()->request->getParam('service');
+        $tracking_number = craft()->request->getParam('tracking_number');
+
+        $message = [];
+        $message[] = 'Carrier: ' . ($carrier ?: 'none');
+        $message[] = 'Service: ' . ($service ?: 'none');
+        $message[] = 'Tracking Number: ' . ($tracking_number ?: 'none');
+        return implode($message, ', ');
+    }
+
+    /**
+     * Find the order model given the order_number passed to us from ShipStation.
+     *
+     * Note: the order_number value from ShipStation corresponds to $order->number that we
+     *       return to ShipStation as part of the getOrders() method above.
+     *
+     * @throws HttpException, 404 if not found, 406 if order number is invalid
+     * @return Commerce_Order
+     */
+    protected function orderFromParams() {
+        if ($order_number = craft()->request->getParam('order_number')) {
+            if ($order = craft()->commerce_orders->getOrderByNumber($order_number)) {
+                return $order;
+            }
+            throw new HttpException(404, "Order with number '{$order_number}' not found");
+        }
+        throw new HttpException(406, 'Order number must be set');
     }
 }
