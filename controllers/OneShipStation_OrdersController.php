@@ -14,6 +14,9 @@ class Oneshipstation_OrdersController extends BaseController
      * @throws HttpException for malformed requests
      */
     public function actionProcess(array $variables=[]) {
+        if (!$this->authenticate()) {
+            throw new HttpException(401);
+        }
         switch (craft()->request->getQuery('action')) {
             case 'export':
                 return $this->getOrders();
@@ -30,8 +33,12 @@ class Oneshipstation_OrdersController extends BaseController
      * @return bool, true if successfully authenticated or false otherwise
      */
     protected function authenticate() {
-        //TODO
-        return true;
+        $expectedUsername = craft()->plugins->getPlugin('oneshipstation')->getSettings()->oneshipstation_username;
+        $expectedPassword = craft()->plugins->getPlugin('oneshipstation')->getSettings()->oneshipstation_password;
+        $username = array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : null;
+        $password = array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : null;
+
+        return $expectedUsername == $username && $expectedPassword == $password;
     }
 
     /**

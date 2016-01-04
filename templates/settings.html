@@ -1,0 +1,31 @@
+<h3>Info submitted will allow ShipStation to begin communicating with Craft.</h3>
+
+<div class="field">
+    <div class="heading">
+        <label for="oneshipstation_username">Username</label>
+        <div class="instructions">
+            <p>This username associated with your custom store, not your Craft nor ShipStation usernames.</p>
+        </div>
+    </div>
+    <div class="input">
+        <input class="text fullwidth" type="text" id="oneshipstation_username" name="oneshipstation_username" value="{{ settings.oneshipstation_username }}" />
+    </div>
+</div>
+
+<div class="field">
+    <div class="heading">
+        <label for="oneshipstation_password">Password</label>
+        <div class="instructions">
+            <p>This password associated with your custom store, not your Craft nor ShipStation passwords.</p>
+        </div>
+    </div>
+    <div class="input">
+        <input class="text fullwidth" type="password" id="oneshipstation_password" name="oneshipstation_password" value="{{ settings.oneshipstation_password }}" />
+    </div>
+</div>
+
+<div class="field">
+    <div class="heading">
+        <p>URL to custom XML Page should be "{{ siteUrl }}oneshipstation/shipstation/orders"</p>
+    </div>
+</div>

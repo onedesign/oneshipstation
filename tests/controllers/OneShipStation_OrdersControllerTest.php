@@ -10,7 +10,10 @@ class OneShipStation_OrdersControllerTest extends BaseTest
         parent::setup();
 
         craft()->plugins->loadPlugins();
-        $this->settings = craft()->plugins->getPlugin('OneShipStation')->getSettings();
+        $this->settings = craft()->plugins->getPlugin('oneshipstation')->getSettings();
+
+        $this->settings->oneshipstation_username = "hello";
+        $this->settings->oneshipstation_password = "world";
 
         //TODO determine what these parameters are
         $this->controller = new Oneshipstation_OrdersController(null, null);
