@@ -104,44 +104,29 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         ];
         $this->mapCraftModel($item_xml, $item_mapping, $item);
  
-        // TODO locate options
-        #$option_xml = $this->options($item_xml, $item->getOptions());
+        $option_xml = $this->options($item_xml, $item->snapshot['options']);
 
         return $item_xml;
     }
 
     /**
-     * Build an XML document given an array of options
+     * Build an XML document given a hash of options
      *
      * @param SimpleXMLElement $xml the xml to add a child to or modify
-     * @param [Commerce_OrderAdjustmentModel] $options
+     * @param [String] $options
      * @param String $name the name of the child node, default 'Options'
      * @return SimpleXMLElement
      */
     public function options(\SimpleXMLElement $xml, $options, $name='Options') {
         $options_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
-        foreach ($options as $option) {
-            $this->option($options_xml, $option);
+
+        foreach ($options as $key => $value) {
+            $option_xml = $options_xml->addChild('Option');
+            $option_xml->addChild('Name', $this->cdata($key));
+            $option_xml->addChild('Value', $this->cdata($value));
         }
 
         return $xml;
-    }
-
-    /**
-     * Build an XML document given a Commerce_OrderAdjustmentModel instance
-     *
-     * @param SimpleXMLElement $xml the xml to add a child to or modify
-     * @param Commerce_OrderAdjustmentModel $option
-     * @param String $name the name of the child node, default 'Option'
-     * @return SimpleXMLElement
-     */
-    public function option(\SimpleXMLElement $xml, Commerce_OrderAdjustmentModel $option, $name='Option') {
-        $option_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
-
-        $option_mapping = [];
-        $this->mapCraftModel($option_xml, $option_mapping, $option);
-
-        return $option_xml;
     }
 
     /**
