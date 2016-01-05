@@ -39,9 +39,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                           'TaxAmount'       => ['field' => 'totalTax',
                                                 'cdata' => false],
                           'ShippingAmount'  => ['field' => 'totalShippingCost',
-                                                'cdata' => false],
-                          'CustomerNotes'   => 'message',
-                          'CustomField1'    => 'couponCode'
+                                                'cdata' => false]
         ];
         $this->mapCraftModel($order_xml, $order_mapping, $order);
 
