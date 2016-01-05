@@ -31,28 +31,31 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function order(\SimpleXMLElement $xml, Commerce_OrderModel $order, $name='Order') {
         $order_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $order_mapping = ['OrderID'         => ['field' => 'id',
-                                                'cdata' => false],
-                          'OrderNumber'     => ['field' => 'number',
-                                                'cdata' => false],
-                          'OrderDate'       => ['field' => 'dateOrdered',
-                                                'cdata' => false],
-                          'OrderStatus'     => ['field' => 'orderStatusId',
-                                                'cdata' => false],
-                          'LastModified'    => ['field' => 'datePaid',
-                                                'cdata' => false],
-                          'ShippingMethod'  => 'shippingMethodhandle',
-                          'PaymentMethod'   => ['field' => 'paymentMethodId',
-                                                'cdata' => false],
-                          'OrderTotal'      => ['field' => 'totalPrice',
+        $order_mapping = ['OrderID'         => 'id',
+                          'OrderNumber'     => 'number',
+                          'OrderStatus'     => 'orderStatusId',
+                          'OrderTotal'      => ['callback' => function($order) { return round($order->totalPrice, 2); },
                                                 'cdata' => false],
                           'TaxAmount'       => ['field' => 'totalTax',
                                                 'cdata' => false],
                           'ShippingAmount'  => ['field' => 'totalShippingCost',
                                                 'cdata' => false],
+                          'CustomerNotes'   => 'message',
                           'CustomField1'    => 'couponCode'
         ];
         $this->mapCraftModel($order_xml, $order_mapping, $order);
+
+        if ($dateOrderedObj = $order->dateOrdered)
+            $order_xml->addChild('OrderDate', date_format($dateOrderedObj, 'n/j/Y H:m'));
+
+        if ($lastModifiedObj = $order->datePaid)
+            $order_xml->addChild('LastModified', date_format($lastModifiedObj, 'n/j/Y H:m'));
+
+        if ($shippingObj = $order->shippingMethod)
+            $order_xml->addChild('ShippingMethod', $this->cdata($shippingObj->handle));
+        
+        if ($paymentObj = $order->paymentMethod)
+            $order_xml->addChild('PaymentMethod', $this->cdata($paymentObj->name));
 
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
@@ -91,19 +94,21 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $name='Item') {
         $item_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $item_mapping = ['LineItemID'       => ['field' => 'id',
-                                                'cdata' => false],
-                         'SKU'              => 'optionsSignature',
+        $item_mapping = ['SKU'              => 'id',
                          'Name'             => 'description',
-                         'Weight'           => ['field' => 'weight',
+                         'Weight'           => ['callback' => function($item) { return round($item->weight, 2); },
                                                 'cdata' => false],
                          'Quantity'         => ['field' => 'qty',
                                                 'cdata' => false],
-                         'UnitPrice'        => ['field' => 'price',
+                         'UnitPrice'        => ['callback' => function($item) { return round($item->price, 2); },
+                                                'cdata' => false],
+                         'Adjustment'      =>  ['field' => 'onSale',
                                                 'cdata' => false]
         ];
         $this->mapCraftModel($item_xml, $item_mapping, $item);
  
+        $item_xml->addChild('WeightUnits', 'Grams');
+
         $option_xml = $this->options($item_xml, $item->snapshot['options']);
 
         return $item_xml;
@@ -230,6 +235,10 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         //if value is an attribute on the model, passed as a string field name
         else if (!is_array($options)) {
             $value = $model->{$options};
+        }
+
+        if ($value === true || $value === false) {
+            $value = ($value) ? "true" : "false";
         }
 
         //wrap in cdata unless explicitly set not to
