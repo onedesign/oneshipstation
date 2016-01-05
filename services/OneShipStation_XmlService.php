@@ -116,7 +116,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      * Build an XML document given a hash of options
      *
      * @param SimpleXMLElement $xml the xml to add a child to or modify
-     * @param [String] $options
+     * @param array $options
      * @param String $name the name of the child node, default 'Options'
      * @return SimpleXMLElement
      */
