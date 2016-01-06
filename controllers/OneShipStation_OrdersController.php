@@ -69,7 +69,7 @@ class Oneshipstation_OrdersController extends BaseController
         if (craft()->elements->saveElement($order)) {
 
             $shippingInformation = $this->getShippingInformationFromParams();
-            if (craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
+            if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
                 Craft::log('Logging shipping information failed');
             }
 
@@ -88,14 +88,10 @@ class Oneshipstation_OrdersController extends BaseController
      * @return String
      */
     protected function orderStatusMessageFromShipstationParams() {
-        $carrier = craft()->request->getParam('carrier');
-        $service = craft()->request->getParam('service');
-        $tracking_number = craft()->request->getParam('tracking_number');
-
-        $message = [];
-        $message[] = 'Carrier: ' . ($carrier ?: 'none');
-        $message[] = 'Service: ' . ($service ?: 'none');
-        $message[] = 'Tracking Number: ' . ($tracking_number ?: 'none');
+        $message = array();
+        foreach ($this->getShippingInformationFromParams() as $field => $value) {
+            $message[] = $field . ': ' . $value;
+        }
         return implode($message, ', ');
     }
 
