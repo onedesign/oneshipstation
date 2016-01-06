@@ -64,8 +64,10 @@ class Oneshipstation_OrdersController extends BaseController
     protected function parseDate($field_name) {
         $date = null;
         if ($date_raw = craft()->request->getParam($field_name)) {
-            if (strtotime($date = date('Y-m-d H:i:s', strtotime($date_raw))))
-                return $date;   
+            $date = strtotime($date_raw);
+            if ($date !== false) {
+                return date('Y-m-d H:i:s', $date);
+            }  
         }
         throw new HttpException(400);
     }
