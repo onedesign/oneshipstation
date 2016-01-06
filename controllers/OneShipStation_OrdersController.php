@@ -22,6 +22,8 @@ class Oneshipstation_OrdersController extends BaseController
                 return $this->getOrders();
             case 'shipnotify':
                 return $this->postShipment();
+            case 'daterange':
+                return $this->getOrdersBetween(new DateTime('last month'), new DateTime('now'));
             default:
                 throw new HttpException(400);
         }
@@ -47,6 +49,19 @@ class Oneshipstation_OrdersController extends BaseController
     protected function getOrders() {
         //TODO
         return true;
+    }
+
+    /**
+     * @param DateTime $start
+     * @param DateTime $end
+     *
+     * @return Commerce_OrderModel[]|null
+     */
+    protected function getOrdersBetween($start, $end) {
+        $criteria = craft()->elements->getCriteria('Commerce_Order');
+        $criteria->dateOrdered = array('and', '> '.date_format($start, 'Y-m-d H:i:s'),
+                                              '< '.date_format($end, 'Y-m-d H:i:s'));
+        return $criteria->find();
     }
 
     /**
