@@ -52,8 +52,8 @@ class Oneshipstation_OrdersController extends BaseController
      */
     protected function getOrders() {
         $orders= craft()->elements->getCriteria('Commerce_Order');
-        $orders->dateOrdered = array('and', '>= '.$this->parseDate('start_date'),
-                                            '<= '.$this->parseDate('end_date'));
+        $orders->dateOrdered = array('and', '> '.$this->parseDate('start_date'),
+                                            '< '.$this->parseDate('end_date'));
 
         $parent_xml = new \SimpleXMLElement('<Orders />');
         craft()->oneShipStation_xml->orders($parent_xml, $orders->find());
@@ -65,8 +65,11 @@ class Oneshipstation_OrdersController extends BaseController
         $date = null;
         if ($date_raw = craft()->request->getParam($field_name)) {
             $date = strtotime($date_raw);
-            if ($date !== false) {
-                return date('Y-m-d H:i:s', $date);
+            if ($date !== false) {;
+                if ($field_name === 'start_date')
+                    return date('Y-m-d H:i:s', $date);
+                else
+                    return date('Y-m-d H:i:59', $date);
             }  
         }
         throw new HttpException(400);
