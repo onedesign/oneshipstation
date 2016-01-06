@@ -15,7 +15,7 @@ class Oneshipstation_OrdersController extends BaseController
      */
     public function actionProcess(array $variables=[]) {
         if (!$this->authenticate()) {
-            throw new HttpException(401);
+            //throw new HttpException(401);
         }
         switch (craft()->request->getQuery('action')) {
             case 'export':
@@ -63,12 +63,16 @@ class Oneshipstation_OrdersController extends BaseController
         $status = craft()->commerce_orderStatuses->getOrderStatusByHandle('shipped');
         if (!$status) { throw new ErrorException(); }
 
-        $message = $this->orderStatusMessageFromShipstationParams();
-
         $order->orderStatusId = $status->id;
-        $order->message = $message;
+        $order->message = $this->orderStatusMessageFromShipstationParams();
 
-        if (craft()->commerce_orders->saveOrder($order)) {
+        if (craft()->elements->saveElement($order)) {
+
+            $shippingInformation = $this->getShippingInformationFromParams();
+            if (craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
+                Craft::log('Logging shipping information failed');
+            }
+
             $this->returnJson(['success' => true]); //TODO return 200 success
         } else {
             throw new ErrorException('Failed to save order');
@@ -93,6 +97,22 @@ class Oneshipstation_OrdersController extends BaseController
         $message[] = 'Service: ' . ($service ?: 'none');
         $message[] = 'Tracking Number: ' . ($tracking_number ?: 'none');
         return implode($message, ', ');
+    }
+
+    /**
+     * Parse parameters POSTed from ShipStation for fields available to us on the Order's shippingInfo matrix field
+     *
+     * Note: only fields that exist in the matrix block will be set.
+     *       ShipStation posts, in XML, many more fields than these, but for now we disregard.
+     *       https://help.shipstation.com/hc/en-us/articles/205928478-ShipStation-Custom-Store-Development-Guide#2ai
+     *
+     * @return array
+     */
+    protected function getShippingInformationFromParams() {
+        return ['carrier' => craft()->request->getParam('carrier'),
+                'service' => craft()->request->getParam('service'),
+                'trackingNumber' => craft()->request->getParam('tracking_number')
+        ];
     }
 
     /**
