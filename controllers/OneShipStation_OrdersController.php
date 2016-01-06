@@ -52,6 +52,8 @@ class Oneshipstation_OrdersController extends BaseController
     }
 
     /**
+     * Returns a Commerce_OrderModel[] with orders between the $start date and $end date.
+     *
      * @param DateTime $start
      * @param DateTime $end
      *
