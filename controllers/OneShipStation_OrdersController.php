@@ -19,7 +19,7 @@ class Oneshipstation_OrdersController extends BaseController
         }
         switch (craft()->request->getQuery('action')) {
             case 'export':
-                return $this->getOrders(new DateTime('last month'), new DateTime('today')); // remove later
+                return $this->getOrders();
             case 'shipnotify':
                 return $this->postShipment();
             default:
@@ -50,10 +50,14 @@ class Oneshipstation_OrdersController extends BaseController
      *
      * @return Commerce_OrderModel[]|null
      */
-    protected function getOrders($start, $end) {
+    protected function getOrders() {
         $orders= craft()->elements->getCriteria('Commerce_Order');
-        $orders->dateOrdered = array('and', '> '.date_format($start, 'Y-m-d H:i:s'),
-                                            '< '.date_format($end, 'Y-m-d H:i:s'));
+        if (isset($_GET['start_date']) && isset($_GET['end_date'])) {
+            $orders->dateOrdered = array('and', '> '.date('Y-m-d H:i:s', strtotime($_GET['start_date'])),
+                                                '< '.date('Y-m-d H:i:s', strtotime($_GET['end_date'])));
+        } else {
+            throw new HttpException(400);
+        }
 
         $parent_xml = new \SimpleXMLElement('<Orders />');
         craft()->oneShipStation_xml->orders($parent_xml, $orders->find());
