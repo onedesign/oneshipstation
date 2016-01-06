@@ -65,9 +65,9 @@ class Oneshipstation_OrdersController extends BaseController
         $date = null;
         if ($date_raw = craft()->request->getParam($field_name)) {
             if (strtotime($date = date('Y-m-d H:i:s', strtotime($date_raw))))
-                return $date;
-            throw new HttpException(400);
+                return $date;   
         }
+        throw new HttpException(400);
     }
 
     /**
