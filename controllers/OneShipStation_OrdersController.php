@@ -44,14 +44,34 @@ class Oneshipstation_OrdersController extends BaseController
     /**
      * Renders a big XML file of all orders in a format described by ShipStation
      * Note: this should probably get orders using Craft Commerce's variable/service if possible
+     *
+     * @param DateTime $start
+     * @param DateTime $end
+     *
+     * @return Commerce_OrderModel[]|null
      */
     protected function getOrders() {
-        $orders = craft()->elements->getCriteria('Commerce_Order');
+        $orders= craft()->elements->getCriteria('Commerce_Order');
+        $orders->dateOrdered = array('and', '> '.$this->parseDate('start_date'),
+                                            '< '.$this->parseDate('end_date'));
 
         $parent_xml = new \SimpleXMLElement('<Orders />');
-        craft()->oneShipStation_xml->orders($parent_xml, $orders);
+        craft()->oneShipStation_xml->orders($parent_xml, $orders->find());
 
         $this->returnXML($parent_xml);
+    }
+
+    protected function parseDate($field_name) {
+        if ($date_raw = craft()->request->getParam($field_name)) {
+            $date = strtotime($date_raw);
+            if ($date !== false) {
+                if ($field_name === 'start_date')
+                    return date('Y-m-d H:i:s', $date);
+                else
+                    return date('Y-m-d H:i:59', $date);
+            }  
+        }
+        throw new HttpException(400);
     }
 
     /**
