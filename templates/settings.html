@@ -26,6 +26,21 @@
 
 <div class="field">
     <div class="heading">
-        <p>URL to custom XML Page should be "{{ siteUrl }}oneshipstation/shipstation/orders"</p>
+        <label for="orders_page_size">Page Size for Orders</label>
+        <div class="instructions">
+            <p>The number of orders returned for each request from ShipStation. Too many orders at once will take too long to respond, while too few will require many requests. (Default 25)</p>
+        </div>
+    </div>
+    <div class="input">
+        <input class="text fullwidth" id="orders_page_size" name="orders_page_size" value="{{ settings.orders_page_size }}" />
+    </div>
+</div>
+
+<hr />
+
+<div class="field">
+    <div class="heading">
+        <p>URL to custom XML Page should be:</p>
+        <pre><code>{{ siteUrl }}actions/oneShipStation/orders/process</code></pre>
     </div>
 </div>

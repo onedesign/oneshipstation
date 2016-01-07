@@ -107,7 +107,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
  
         $item_xml->addChild('WeightUnits', 'Grams');
 
-        $option_xml = $this->options($item_xml, $item->snapshot['options']);
+        if (isset($item->snapshot['options'])) {
+            $option_xml = $this->options($item_xml, $item->snapshot['options']);
+        }
 
         return $item_xml;
     }

@@ -68,7 +68,8 @@ class OneShipStationPlugin extends BasePlugin {
     protected function defineSettings() {
         return array(
             'oneshipstation_username' => array(AttributeType::String),
-            'oneshipstation_password' => array(AttributeType::String)
+            'oneshipstation_password' => array(AttributeType::String),
+            'orders_page_size'        => array(AttributeType::Number, 'default' => 25),
         );
     }
 

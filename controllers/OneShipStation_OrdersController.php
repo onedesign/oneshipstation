@@ -51,16 +51,51 @@ class Oneshipstation_OrdersController extends BaseController
      * @return Commerce_OrderModel[]|null
      */
     protected function getOrders() {
-        $orders= craft()->elements->getCriteria('Commerce_Order');
-        $orders->dateOrdered = array('and', '> '.$this->parseDate('start_date'),
-                                            '< '.$this->parseDate('end_date'));
+        $criteria = craft()->elements->getCriteria('Commerce_Order');
+        if ($start_date = $this->parseDate('start_date') && $end_date = $this->parseDate('end_date')) {
+            $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
+        }
+
+        $num_pages = $this->paginateOrders($criteria);
 
         $parent_xml = new \SimpleXMLElement('<Orders />');
-        craft()->oneShipStation_xml->orders($parent_xml, $orders->find());
+        $parent_xml->addAttribute('pages', $num_pages);
+
+        craft()->oneShipStation_xml->orders($parent_xml, $criteria->find());
 
         $this->returnXML($parent_xml);
     }
 
+    /**
+     * For a Criteria instance of Orders, return the number of total pages and apply a corresponding offset and limit
+     *
+     * @param ElementCriteriaModel, a REFERENCE to the criteria instance
+     * @return Int total number of pages
+     */
+    protected function paginateOrders(&$criteria) {
+        $pageSize = craft()->plugins->getPlugin('OneShipStation')->getSettings()->orders_page_size;
+        if (!is_numeric($pageSize) || $pageSize < 1) {
+            $pageSize = 25;
+        }
+
+        $numPages = ceil($criteria->count() / $pageSize);
+        $pageNum = craft()->request->getParam('page');
+        if (!is_numeric($pageNum) || $pageNum < 1) {
+            $pageNum = 1;
+        }
+
+        $criteria->limit = $pageSize;
+        $criteria->offset = ($pageNum - 1) * $pageSize;
+
+        return $numPages;
+    }
+
+    /**
+     * For a given date field, parse and return its date as a string
+     *
+     * @param String $field_name, the name of the field in GET params
+     * @return String|null the formatted date string
+     */
     protected function parseDate($field_name) {
         if ($date_raw = craft()->request->getParam($field_name)) {
             $date = strtotime($date_raw);
@@ -71,7 +106,7 @@ class Oneshipstation_OrdersController extends BaseController
                     return date('Y-m-d H:i:59', $date);
             }  
         }
-        throw new HttpException(400);
+        return null;
     }
 
     /**
