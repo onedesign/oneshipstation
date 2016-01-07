@@ -1,6 +1,8 @@
 <?php
 namespace Craft;
 
+define("PAGESIZE", 25);
+
 class Oneshipstation_OrdersController extends BaseController
 {
     protected $allowAnonymous = true;
@@ -51,12 +53,20 @@ class Oneshipstation_OrdersController extends BaseController
      * @return Commerce_OrderModel[]|null
      */
     protected function getOrders() {
-        $orders= craft()->elements->getCriteria('Commerce_Order');
-        $orders->dateOrdered = array('and', '> '.$this->parseDate('start_date'),
-                                            '< '.$this->parseDate('end_date'));
+        $criteria = craft()->elements->getCriteria('Commerce_Order');
+        $criteria->dateOrdered = array('and', '> '.$this->parseDate('start_date'),
+                                              '< '.$this->parseDate('end_date'));
+
+        $num_pages = ceil($criteria->count() / PAGESIZE);
+        $page_num = craft()->request->getParam('page');
+
+        $criteria->limit = PAGESIZE;
+        $criteria->offset = ($page_num - 1) * PAGESIZE;
 
         $parent_xml = new \SimpleXMLElement('<Orders />');
-        craft()->oneShipStation_xml->orders($parent_xml, $orders->find());
+        $parent_xml->addAttribute('pages', $num_pages);
+
+        craft()->oneShipStation_xml->orders($parent_xml, $criteria->find());
 
         $this->returnXML($parent_xml);
     }
