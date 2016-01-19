@@ -3,6 +3,10 @@ namespace Craft;
 
 class OneShipStation_XmlService extends BaseApplicationComponent {
 
+    public function shouldInclude($order) {
+        return $order->getShippingAddress() && $order->getBillingAddress();
+    }
+
     /**
      * Build an XML document given an array of orders
      *
