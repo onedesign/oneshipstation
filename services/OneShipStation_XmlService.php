@@ -57,9 +57,12 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
-        $customer_xml = $this->customer($order_xml, $order->getCustomer());
-        $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
-        $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
+        $customer = $order->getCustomer();
+        $customer_xml = $this->customer($order_xml, $customer);
+        $billTo_xml = $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
+        $billTo_xml->addChild('Email', $customer->email);
+        $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
+        $shipTo_xml->addChild('Email', $customer->email);
 
         return $order_xml;
     }
@@ -145,8 +148,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function customer(\SimpleXMLElement $xml, Commerce_CustomerModel $customer, $name='Customer') {
         $customer_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $customer_mapping = ['CustomerCode' => 'id',
-                             'Email'        => 'email'];
+        $customer_mapping = ['CustomerCode' => 'id'];
         $this->mapCraftModel($customer_xml, $customer_mapping, $customer);
 
         return $customer_xml;
