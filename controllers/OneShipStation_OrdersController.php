@@ -61,7 +61,7 @@ class Oneshipstation_OrdersController extends BaseController
         $order = $this->orderFromParams();
 
         $status = craft()->commerce_orderStatuses->getOrderStatusByHandle('shipped');
-        if (!$status) { throw new ErrorException(); }
+        if (!$status) { throw new ErrorException("Failed to find Commerce OrderStatus 'Shipped'"); }
 
         $order->orderStatusId = $status->id;
         $order->message = $this->orderStatusMessageFromShipstationParams();
