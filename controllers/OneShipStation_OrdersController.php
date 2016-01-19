@@ -110,11 +110,84 @@ class Oneshipstation_OrdersController extends BaseController
     }
 
     /**
-     * Updates order status for a given order, as posted here by ShipStation
+     * Updates order status for a given order, as posted here by ShipStation.
+     * The order is found using GET param order_number.
+     *
+     * See craft/plugins/commerce/controllers/Commerce_OrdersController.php#actionUpdateStatus() for details
+     *
+     * @throws ErrorException if the order fails to save
      */
     protected function postShipment() {
-        //TODO
-        return true;
+        $order = $this->orderFromParams();
+
+        $status = craft()->commerce_orderStatuses->getOrderStatusByHandle('shipped');
+        if (!$status) { throw new ErrorException("Failed to find Commerce OrderStatus 'Shipped'"); }
+
+        $order->orderStatusId = $status->id;
+        $order->message = $this->orderStatusMessageFromShipstationParams();
+
+        if (craft()->elements->saveElement($order)) {
+
+            $shippingInformation = $this->getShippingInformationFromParams();
+            if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
+                Craft::log('Logging shipping information failed');
+            }
+
+            $this->returnJson(['success' => true]); //TODO return 200 success
+        } else {
+            throw new ErrorException('Failed to save order');
+        }
+    }
+
+    /**
+     * Craft Commerce stores a message along with all Order Status changes.
+     * We'll leverage that to store the carrier, service, and tracking number sent to us from ShipStation.
+     *
+     * In the future we may prefer this to be rendered in a template, or even stored in another variable.
+     *
+     * @return String
+     */
+    protected function orderStatusMessageFromShipstationParams() {
+        $message = array();
+        foreach ($this->getShippingInformationFromParams() as $field => $value) {
+            $message[] = $field . ': ' . $value;
+        }
+        return implode($message, ', ');
+    }
+
+    /**
+     * Parse parameters POSTed from ShipStation for fields available to us on the Order's shippingInfo matrix field
+     *
+     * Note: only fields that exist in the matrix block will be set.
+     *       ShipStation posts, in XML, many more fields than these, but for now we disregard.
+     *       https://help.shipstation.com/hc/en-us/articles/205928478-ShipStation-Custom-Store-Development-Guide#2ai
+     *
+     * @return array
+     */
+    protected function getShippingInformationFromParams() {
+        return ['carrier' => craft()->request->getParam('carrier'),
+                'service' => craft()->request->getParam('service'),
+                'trackingNumber' => craft()->request->getParam('tracking_number')
+        ];
+    }
+
+    /**
+     * Find the order model given the order_number passed to us from ShipStation.
+     *
+     * Note: the order_number value from ShipStation corresponds to $order->number that we
+     *       return to ShipStation as part of the getOrders() method above.
+     *
+     * @throws HttpException, 404 if not found, 406 if order number is invalid
+     * @return Commerce_Order
+     */
+    protected function orderFromParams() {
+        if ($order_number = craft()->request->getParam('order_number')) {
+            if ($order = craft()->commerce_orders->getOrderByNumber($order_number)) {
+                return $order;
+            }
+            throw new HttpException(404, "Order with number '{$order_number}' not found");
+        }
+        throw new HttpException(406, 'Order number must be set');
     }
 
     /**
