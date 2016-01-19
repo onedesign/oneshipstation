@@ -66,7 +66,6 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $billTo_xml = $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
         $billTo_xml->addChild('Email', $customer->email);
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
-        $shipTo_xml->addChild('Email', $customer->email);
 
         return $order_xml;
     }
@@ -178,7 +177,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                                 'City'       => 'city',
                                 'State'      => 'stateText',
                                 'PostalCode' => 'zipCode',
-                                'Country'    => 'countryText'
+                                'Country'    =>  ['callback' => function($address) { return $address->countryId ? $address->getCountry()->iso : null; },
+                                                  'cdata'    => false]
             ];
             $this->mapCraftModel($address_xml, $address_mapping, $address);
         }
