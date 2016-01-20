@@ -55,6 +55,7 @@ class Oneshipstation_OrdersController extends BaseController
         if ($start_date = $this->parseDate('start_date') && $end_date = $this->parseDate('end_date')) {
             $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
         }
+        $criteria->orderStatusId = true;
 
         $num_pages = $this->paginateOrders($criteria);
 
