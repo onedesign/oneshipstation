@@ -58,6 +58,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         
         if ($paymentObj = $order->paymentMethod)
             $order_xml->addChild('PaymentMethod', $this->cdata($paymentObj->name));
+        
+        if ($this->isWholesaler($order->customer->id))
+            $order_xml->addChild('CustomField1', true);
 
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
@@ -256,6 +259,14 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
     protected function cdata($value) {
         return "<![CDATA[{$value}]]>";
+    }
+
+    protected function isWholesaler($customerId) {
+        $wholesalersId = craft()->userGroups->getGroupByHandle('wholesalers')->id;
+        $userGroups = craft()->userGroups->getGroupsByUserId($customerId);
+        if (array_search($wholesalersId, array_column($userGroups, 'id')) !== false)
+            return true;
+        return false;
     }
 
 }
