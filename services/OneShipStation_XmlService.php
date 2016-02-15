@@ -59,8 +59,12 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         if ($paymentObj = $order->paymentMethod)
             $order_xml->addChild('PaymentMethod', $this->cdata($paymentObj->name));
         
-        if ($this->isWholesaleOrder($order->customer->id))
-            $order_xml->addChild('CustomField1', $this->cdata(true));
+        if (!is_null(craft()->plugins->getPlugin('fieldnotes')) && craft()->plugins->getPlugin('fieldnotes')->getSettings()->one_shipstation_mode) {
+            if ($this->isWholesaleOrder($order->customer->id))
+                $order_xml->addChild('CustomField1', $this->cdata('wholesaler: true'));
+            else
+                $order_xml->addChild('CustomField1', $this->cdata('wholesaler: false'));
+        }
 
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
