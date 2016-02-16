@@ -59,13 +59,6 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         if ($paymentObj = $order->paymentMethod)
             $order_xml->addChild('PaymentMethod', $this->cdata($paymentObj->name));
         
-        if (!is_null(craft()->plugins->getPlugin('fieldnotes')) && craft()->plugins->getPlugin('fieldnotes')->getSettings()->one_shipstation_mode) {
-            if ($this->isWholesaleOrder($order->customer->id))
-                $order_xml->addChild('CustomField1', $this->cdata('wholesaler: true'));
-            else
-                $order_xml->addChild('CustomField1', $this->cdata('wholesaler: false'));
-        }
-
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
         $customer = $order->getCustomer();
@@ -73,6 +66,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $billTo_xml = $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
         $billTo_xml->addChild('Email', $customer->email);
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
+
+        $this->customOrderFields($order_xml, $order);
 
         return $order_xml;
     }
@@ -193,6 +188,28 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         return $address_xml;
     }
 
+    /**
+     * Allow plugins to add custom fields to the order
+     *
+     * @param SimpleXMLElement $xml the order xml to add a child
+     * @param Commerce_OrderModel $order
+     * @return SimpleXMLElement
+     */
+    public function customOrderFields(\SimpleXMLElement $order_xml, Commerce_OrderModel $order) {
+        $customFields = ['CustomField1', 'CustomField2', 'CustomField3'];
+        foreach ($customFields as $fieldName) {
+            if ($customField1Callbacks = craft()->plugins->call("oneShipStation{$fieldName}")) {
+                foreach ($customField1Callbacks as $callback) {
+                    if (is_callable($callback)) {
+                        $value = $callback($order);
+                        $order_xml->addChild($fieldName, $value);
+                    }
+                }
+            }
+        }
+        return $order_xml;
+    }
+
     /***************************** helpers *******************************/
 
     protected function mapCraftModel($xml, $mapping, $model) {
@@ -263,12 +280,6 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
     protected function cdata($value) {
         return "<![CDATA[{$value}]]>";
-    }
-
-    protected function isWholesaleOrder($customerId) {
-        $wholesalersId = craft()->userGroups->getGroupByHandle('wholesalers')->id;
-        $userGroups = craft()->userGroups->getGroupsByUserId($customerId);
-        return array_search($wholesalersId, array_column($userGroups, 'id')) !== false;
     }
 
 }
