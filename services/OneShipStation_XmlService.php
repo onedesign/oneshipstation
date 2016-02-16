@@ -63,8 +63,21 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         $customer = $order->getCustomer();
         $customer_xml = $this->customer($order_xml, $customer);
-        $billTo_xml = $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
-        $billTo_xml->addChild('Email', $customer->email);
+
+        if ($billingAddress = $order->getBillingAddress()) {
+            $billTo_xml = $this->address($customer_xml, $billingAddress, 'BillTo');
+            $name = $billingAddress->firstName . ' ' . $billingAddress->lastName;
+            if (trim($name) == '') {
+                $user = $customer->getUser();
+                $name = $user->firstName . ' ' . $user->lastName;
+            }
+            if (trim($name) == '') {
+                $name = 'unknown';
+            }
+            $billTo_xml->addChild('Name', $this->cdata($name));
+            $billTo_xml->addChild('Email', $customer->email);
+        }
+
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
 
         return $order_xml;
@@ -169,8 +182,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $address_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
         if (!is_null($address)) {
-            $address_mapping = ['Name'       => function($address) { return "{$address->firstName} {$address->lastName}"; },
-                                'Company'    => 'businessName',
+            $address_mapping = ['Company'    => 'businessName',
                                 'Phone'      => 'phone',
                                 'Address1'   => 'address1',
                                 'Address2'   => 'address2',
