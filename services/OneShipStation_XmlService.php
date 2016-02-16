@@ -67,6 +67,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $billTo_xml->addChild('Email', $customer->email);
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
 
+        $this->customOrderFields($order_xml, $order);
+
         return $order_xml;
     }
 
@@ -184,6 +186,28 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         }
 
         return $address_xml;
+    }
+
+    /**
+     * Allow plugins to add custom fields to the order
+     *
+     * @param SimpleXMLElement $xml the order xml to add a child
+     * @param Commerce_OrderModel $order
+     * @return SimpleXMLElement
+     */
+    public function customOrderFields(\SimpleXMLElement $order_xml, Commerce_OrderModel $order) {
+        $customFields = ['CustomField1', 'CustomField2', 'CustomField3'];
+        foreach ($customFields as $fieldName) {
+            if ($customFieldCallbacks = craft()->plugins->call("oneShipStation{$fieldName}")) {
+                foreach ($customFieldCallbacks as $callback) {
+                    if (is_callable($callback)) {
+                        $value = $callback($order);
+                        $order_xml->addChild($fieldName, $value);
+                    }
+                }
+            }
+        }
+        return $order_xml;
     }
 
     /***************************** helpers *******************************/
