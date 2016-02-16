@@ -9,7 +9,7 @@ class OneShipStationPlugin extends BasePlugin {
     }
 
     public function getVersion() {
-        return '0.2';
+        return '0.2.1';
     }
 
     public function getDeveloper() {
@@ -70,6 +70,7 @@ class OneShipStationPlugin extends BasePlugin {
             'oneshipstation_username' => array(AttributeType::String),
             'oneshipstation_password' => array(AttributeType::String),
             'orders_page_size'        => array(AttributeType::Number, 'default' => 25),
+            'order_id_prefix'         => array(AttributeType::String),
         );
     }
 
