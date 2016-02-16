@@ -35,7 +35,11 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function order(\SimpleXMLElement $xml, Commerce_OrderModel $order, $name='Order') {
         $order_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $order_mapping = ['OrderID'         => 'id',
+        $order_mapping = ['OrderID'         => ['callback' => function($order) {
+                                                   $settings =  craft()->plugins->getPlugin('oneShipStation')->getSettings();
+                                                   $prefix = $settings->order_id_prefix;
+                                                   return $prefix . $order->id;
+                                               }],
                           'OrderNumber'     => 'number',
                           'OrderStatus'     => 'orderStatusId',
                           'OrderTotal'      => ['callback' => function($order) { return round($order->totalPrice, 2); },

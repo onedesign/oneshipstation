@@ -36,6 +36,18 @@
     </div>
 </div>
 
+<div class="field">
+    <div class="heading">
+        <label for="order_id_prefix">Order ID Prefix</label>
+        <div class="instructions">
+            <p>Order IDs sent to ShipStation will be integers (eg <code>1234</code>). Optionally add a prefix to the ID to guarantee unique IDs (eg a prefix of <code>commerce_</code> would yield an Order ID of <code>commerce_1234</code>).</p>
+        </div>
+    </div>
+    <div class="input">
+        <input class="text fullwidth" type="text" id="order_id_prefix" name="order_id_prefix" value="{{ settings.order_id_prefix }}" />
+    </div>
+</div>
+
 <hr />
 
 <div class="field">
