@@ -54,7 +54,7 @@ craft/plugins/oneshipstation
 
 ### Authentication
 
-Once you have configured your Craft application's OneShipStation, you will need to complete the proces by configuring your [ShipStation "Custom Store" integration](https://help.shipstation.com/hc/en-us/articles/205928478-ShipStation-Custom-Store-Development-Guide#3a).
+Once you have configured your Craft application's OneShipStation, you will need to complete the process by configuring your [ShipStation "Custom Store" integration](https://help.shipstation.com/hc/en-us/articles/205928478-ShipStation-Custom-Store-Development-Guide#3a).
 
 There, you will be required to provide a user name, password, and a URL that ShipStation will use to contact your application.
 
