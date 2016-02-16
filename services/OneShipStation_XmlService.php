@@ -199,7 +199,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $customFields = ['CustomField1', 'CustomField2', 'CustomField3'];
         foreach ($customFields as $fieldName) {
             if ($customField1Callbacks = craft()->plugins->call("oneShipStation{$fieldName}")) {
-                foreach ($customField1Callbacks as $callback) {
+                foreach ($customFieldCallbacks as $callback) {
                     if (is_callable($callback)) {
                         $value = $callback($order);
                         $order_xml->addChild($fieldName, $value);
