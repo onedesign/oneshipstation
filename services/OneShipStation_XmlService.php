@@ -58,7 +58,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         
         if ($paymentObj = $order->paymentMethod)
             $order_xml->addChild('PaymentMethod', $this->cdata($paymentObj->name));
-        
+
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
         $customer = $order->getCustomer();
