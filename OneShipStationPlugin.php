@@ -9,7 +9,7 @@ class OneShipStationPlugin extends BasePlugin {
     }
 
     public function getVersion() {
-        return '0.2';
+        return '0.2.1';
     }
 
     public function getDeveloper() {
