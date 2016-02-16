@@ -64,19 +64,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $customer = $order->getCustomer();
         $customer_xml = $this->customer($order_xml, $customer);
 
-        if ($billingAddress = $order->getBillingAddress()) {
-            $billTo_xml = $this->address($customer_xml, $billingAddress, 'BillTo');
-            $name = $billingAddress->firstName . ' ' . $billingAddress->lastName;
-            if (trim($name) == '') {
-                $user = $customer->getUser();
-                $name = $user->firstName . ' ' . $user->lastName;
-            }
-            if (trim($name) == '') {
-                $name = 'unknown';
-            }
-            $billTo_xml->addChild('Name', $this->cdata($name));
-            $billTo_xml->addChild('Email', $customer->email);
-        }
+        $billTo_xml = $this->billTo($order_xml, $order, $customer);
 
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
 
@@ -168,6 +156,31 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $this->mapCraftModel($customer_xml, $customer_mapping, $customer);
 
         return $customer_xml;
+    }
+
+    /**
+     * Add a BillTo address XML Child
+     *
+     * @param SimpleXMLElement $customer_xml the xml to add a child to or modify
+     * @param Commerce_OrderModel $order
+     * @param Commerce_CustomerModel $customer
+     * @return SimpleXMLElement, or null if no address exists
+     */
+    public function billTo(\SimpleXMLElement $customer_xml, Commerce_OrderModel $order, Commerce_CustomerModel $customer) {
+        if ($billingAddress = $order->getBillingAddress()) {
+            $billTo_xml = $this->address($customer_xml, $billingAddress, 'BillTo');
+            if ($billingAddress->firstName && $billingAddress->lastName) {
+                $name = "{$billingAddress->firstName} {$billingAddress->lastName}";
+            } else {
+                $user = $customer->getUser();
+                $name = ($user->firstName && $user->lastName) ? "{$user->firstName} {$user->lastName}" : 'unknown';
+            }
+            $billTo_xml->addChild('Name', $this->cdata($name));
+            $billTo_xml->addChild('Email', $customer->email);
+
+            return $billTo_xml;
+        }
+        return null;
     }
 
     /**
