@@ -67,9 +67,12 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         $customer = $order->getCustomer();
         $customer_xml = $this->customer($order_xml, $customer);
-        $billTo_xml = $this->address($customer_xml, $order->getBillingAddress(), 'BillTo');
-        $billTo_xml->addChild('Email', $customer->email);
+
+        $billTo_xml = $this->billTo($order_xml, $order, $customer);
+
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
+
+        $this->customOrderFields($order_xml, $order);
 
         return $order_xml;
     }
@@ -162,6 +165,31 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     }
 
     /**
+     * Add a BillTo address XML Child
+     *
+     * @param SimpleXMLElement $customer_xml the xml to add a child to or modify
+     * @param Commerce_OrderModel $order
+     * @param Commerce_CustomerModel $customer
+     * @return SimpleXMLElement, or null if no address exists
+     */
+    public function billTo(\SimpleXMLElement $customer_xml, Commerce_OrderModel $order, Commerce_CustomerModel $customer) {
+        if ($billingAddress = $order->getBillingAddress()) {
+            $billTo_xml = $this->address($customer_xml, $billingAddress, 'BillTo');
+            if ($billingAddress->firstName && $billingAddress->lastName) {
+                $name = "{$billingAddress->firstName} {$billingAddress->lastName}";
+            } else {
+                $user = $customer->getUser();
+                $name = ($user->firstName && $user->lastName) ? "{$user->firstName} {$user->lastName}" : 'unknown';
+            }
+            $billTo_xml->addChild('Name', $this->cdata($name));
+            $billTo_xml->addChild('Email', $customer->email);
+
+            return $billTo_xml;
+        }
+        return null;
+    }
+
+    /**
      * Build an XML document given a Commerce_AddressModel instance
      *
      * @param SimpleXMLElement $xml the xml to add a child to or modify
@@ -173,8 +201,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $address_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
         if (!is_null($address)) {
-            $address_mapping = ['Name'       => function($address) { return "{$address->firstName} {$address->lastName}"; },
-                                'Company'    => 'businessName',
+            $address_mapping = ['Company'    => 'businessName',
                                 'Phone'      => 'phone',
                                 'Address1'   => 'address1',
                                 'Address2'   => 'address2',
@@ -188,6 +215,28 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         }
 
         return $address_xml;
+    }
+
+    /**
+     * Allow plugins to add custom fields to the order
+     *
+     * @param SimpleXMLElement $xml the order xml to add a child
+     * @param Commerce_OrderModel $order
+     * @return SimpleXMLElement
+     */
+    public function customOrderFields(\SimpleXMLElement $order_xml, Commerce_OrderModel $order) {
+        $customFields = ['CustomField1', 'CustomField2', 'CustomField3'];
+        foreach ($customFields as $fieldName) {
+            if ($customFieldCallbacks = craft()->plugins->call("oneShipStation{$fieldName}")) {
+                foreach ($customFieldCallbacks as $callback) {
+                    if (is_callable($callback)) {
+                        $value = $callback($order);
+                        $order_xml->addChild($fieldName, $value);
+                    }
+                }
+            }
+        }
+        return $order_xml;
     }
 
     /***************************** helpers *******************************/
