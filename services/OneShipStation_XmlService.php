@@ -18,7 +18,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function orders(\SimpleXMLElement $xml, $orders, $name='Orders') {
         $orders_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
         foreach ($orders as $order) {
-            $this->order($orders_xml, $order);
+            if ($this->shouldInclude($order)) {
+                $this->order($orders_xml, $order);
+            }
         }
 
         return $xml;
@@ -70,7 +72,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         $billTo_xml = $this->billTo($customer_xml, $order, $customer);
 
-        $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
+        $shipTo_xml = $this->shipTo($customer_xml, $order, $customer);
 
         $this->customOrderFields($order_xml, $order);
 
@@ -187,6 +189,28 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             return $billTo_xml;
         }
         return null;
+    }
+
+    /**
+     * Add a ShipTo address XML Child
+     *
+     * @param SimpleXMLElement $customer_xml the xml to add a child to or modify
+     * @param Commerce_OrderModel $order
+     * @param Commerce_CustomerModel $customer
+     * @return SimpleXMLElement, or null if no address exists
+     */
+    public function shipTo(\SimpleXMLElement $customer_xml, Commerce_OrderModel $order, Commerce_CustomerModel $customer) {
+        $shippingAddress = $order->getShippingAddress();
+        $shipTo_xml = $this->address($customer_xml, $shippingAddress, 'ShipTo');
+        if ($shippingAddress->firstName && $shippingAddress->lastName) {
+            $name = "{$shippingAddress->firstName} {$shippingAddress->lastName}";
+        } else {
+            $user = $customer->getUser();
+            $name = ($user->firstName && $user->lastName) ? "{$user->firstName} {$user->lastName}" : 'unknown';
+        }
+        $shipTo_xml->addChild('Name', $this->cdata($name));
+
+        return $shipTo_xml;
     }
 
     /**
