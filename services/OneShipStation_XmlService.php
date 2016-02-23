@@ -68,7 +68,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $customer = $order->getCustomer();
         $customer_xml = $this->customer($order_xml, $customer);
 
-        $billTo_xml = $this->billTo($order_xml, $order, $customer);
+        $billTo_xml = $this->billTo($customer_xml, $order, $customer);
 
         $shipTo_xml = $this->address($customer_xml, $order->getShippingAddress(), 'ShipTo');
 
