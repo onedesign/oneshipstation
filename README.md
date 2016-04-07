@@ -58,9 +58,9 @@ Once you have configured your Craft application's OneShipStation, you will need 
 
 There, you will be required to provide a user name, password, and a URL that ShipStation will use to contact your application.
 
-### Custom Fields
+### Custom Fields & Internal Notes
 
-Shipstation allows the addition of up to three custom fields per order. This appear to the user as `OrderCustomField1`, `OrderCustomField2`, and `OrderCustomField3`.
+Shipstation allows the addition of up to three custom fields per order. This appear to the user as `OrderCustomField1`, `OrderCustomField2`, and `OrderCustomField3` for custom fields, and `InternalNotes`.
 
 You can populate these fields by ["latching on" to a Craft hook](https://craftcms.com/docs/plugins/hooks-and-events#latching-onto-hooks) in your plugin.
 
@@ -80,6 +80,19 @@ class MyPlugin extends BasePlugin {
 ```
 
 Note: OneShipStation will add a `CustomFieldX` child for each plugin that responds to the hook.
+
+For internal notes, if a plugin responds to the hook at all, the key will be added. Respond as:
+
+```
+class MyPlugin extends BasePlugin {
+    //...
+    public function oneShipStationInternalNotes() {
+        return function($order) {
+            return 'internal notes for this order';
+        };
+    }
+}
+```
 
 ### Installation Requirements
 
