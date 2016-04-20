@@ -43,7 +43,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                                                    return $prefix . $order->id;
                                                }],
                           'OrderNumber'     => 'number',
-                          'OrderStatus'     => 'orderStatusId',
+                          'OrderStatus'     => ['callback' => function($order) { return $order->getOrderStatus()->handle; }],
                           'OrderTotal'      => ['callback' => function($order) { return round($order->totalPrice, 2); },
                                                 'cdata' => false],
                           'TaxAmount'       => ['field' => 'totalTax',
