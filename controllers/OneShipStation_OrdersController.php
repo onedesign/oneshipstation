@@ -17,7 +17,7 @@ class Oneshipstation_OrdersController extends BaseController
         if (!$this->authenticate()) {
             throw new HttpException(401);
         }
-        switch (craft()->request->getQuery('action')) {
+        switch (craft()->request->getParam('action')) {
             case 'export':
                 return $this->getOrders();
             case 'shipnotify':
