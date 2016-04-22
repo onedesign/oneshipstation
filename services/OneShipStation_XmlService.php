@@ -43,7 +43,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                                                    return $prefix . $order->id;
                                                }],
                           'OrderNumber'     => 'number',
-                          'OrderStatus'     => 'orderStatusId',
+                          'OrderStatus'     => ['callback' => function($order) { return $order->getOrderStatus()->handle; }],
                           'OrderTotal'      => ['callback' => function($order) { return round($order->totalPrice, 2); },
                                                 'cdata' => false],
                           'TaxAmount'       => ['field' => 'totalTax',
@@ -60,10 +60,10 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             $order_xml->addChild('LastModified', date_format($lastModifiedObj, 'n/j/Y H:m'));
 
         if ($shippingObj = $order->shippingMethod)
-            $order_xml->addChild('ShippingMethod', $this->cdata($shippingObj->handle));
+            $this->addChildWithCDATA($order_xml, 'ShippingMethod', $shippingObj->handle);
         
         if ($paymentObj = $order->paymentMethod)
-            $order_xml->addChild('PaymentMethod', $this->cdata($paymentObj->name));
+            $this->addChildWithCDATA($order_xml, 'PaymentMethod', $paymentObj->name);
 
         $item_xml = $this->items($order_xml, $order->getLineItems());
 
@@ -142,8 +142,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         foreach ($options as $key => $value) {
             $option_xml = $options_xml->addChild('Option');
-            $option_xml->addChild('Name', $this->cdata($key));
-            $option_xml->addChild('Value', $this->cdata($value));
+            $this->addChildWithCDATA($option_xml, 'Name', $key);
+            $this->addChildWithCDATA($option_xml, 'Value', $value);
         }
 
         return $xml;
@@ -183,7 +183,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                 $user = $customer->getUser();
                 $name = ($user->firstName && $user->lastName) ? "{$user->firstName} {$user->lastName}" : 'unknown';
             }
-            $billTo_xml->addChild('Name', $this->cdata($name));
+            $this->addChildWithCDATA($billTo_xml, 'Name', $name);
             $billTo_xml->addChild('Email', $customer->email);
 
             return $billTo_xml;
@@ -208,7 +208,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             $user = $customer->getUser();
             $name = ($user->firstName && $user->lastName) ? "{$user->firstName} {$user->lastName}" : 'unknown';
         }
-        $shipTo_xml->addChild('Name', $this->cdata($name));
+        $this->addChildWithCDATA($shipTo_xml, 'Name', $name);
 
         return $shipTo_xml;
     }
@@ -249,7 +249,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      * @return SimpleXMLElement
      */
     public function customOrderFields(\SimpleXMLElement $order_xml, Commerce_OrderModel $order) {
-        $customFields = ['CustomField1', 'CustomField2', 'CustomField3'];
+        $customFields = ['CustomField1', 'CustomField2', 'CustomField3', 'InternalNotes'];
         foreach ($customFields as $fieldName) {
             if ($customFieldCallbacks = craft()->plugins->call("oneShipStation{$fieldName}")) {
                 foreach ($customFieldCallbacks as $callback) {
@@ -268,7 +268,13 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     protected function mapCraftModel($xml, $mapping, $model) {
         foreach ($mapping as $name => $attr) {
             $value = $this->valueFromMappingAndModel($attr, $model);
-            $xml->addChild($name, $value);
+
+            //wrap in cdata unless explicitly set not to
+            if (!is_array($attr) || !array_key_exists('cdata', $attr) || $attr['cdata']) {
+                $this->addChildWithCDATA($xml, $name, $value);
+            } else {
+                $xml->addChild($name, $value);
+            }
         }
         return $xml;
     }
@@ -321,18 +327,27 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         }
 
         if ($value === true || $value === false) {
-            $value = ($value) ? "true" : "false";
-        }
-
-        //wrap in cdata unless explicitly set not to
-        if (!is_array($options) || !array_key_exists('cdata', $options) || $options['cdata']) {
-            $value = $this->cdata($value);
+            $value = $value ? "true" : "false";
         }
         return $value;
     }
 
-    protected function cdata($value) {
-        return "<![CDATA[{$value}]]>";
+    /**
+     * Add a child with <!CDATA[...]]>
+     *
+     * We cannot simply do this by manipulating the string, because SimpleXMLElement and/or Craft will encode it
+     *
+     * @param $xml SimpleXMLElement the parent to which we're adding a child
+     * @param $name String the xml node name
+     * @param $value Mixed the value of the new child node, which will be wrapped in CDATA
+     * @return SimpleXMLElement, the new child
+     */
+    protected function addChildWithCDATA(&$xml, $name, $value) {
+        $new_child = $xml->addChild($name);
+        if ($new_child !== NULL) {
+            $node = dom_import_simplexml($new_child);
+            $node->appendChild($node->ownerDocument->createCDATASection($value));
+        }
+        return $new_child;
     }
-
 }
