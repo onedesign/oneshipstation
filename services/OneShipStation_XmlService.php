@@ -113,9 +113,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                                                 'cdata' => false],
                          'Quantity'         => ['field' => 'qty',
                                                 'cdata' => false],
-                         'UnitPrice'        => ['callback' => function($item) { return round($item->price, 2); },
-                                                'cdata' => false],
-                         'Adjustment'      =>  ['field' => 'onSale',
+                         'UnitPrice'        => ['callback' => function($item) { return round($item->salePrice, 2); },
                                                 'cdata' => false]
         ];
         $this->mapCraftModel($item_xml, $item_mapping, $item);

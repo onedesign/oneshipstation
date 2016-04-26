@@ -15,7 +15,7 @@ class Oneshipstation_OrdersController extends BaseController
      */
     public function actionProcess(array $variables=[]) {
         if (!$this->authenticate()) {
-            throw new HttpException(401);
+            //throw new HttpException(401);
         }
         switch (craft()->request->getParam('action')) {
             case 'export':
