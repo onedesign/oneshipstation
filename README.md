@@ -83,6 +83,21 @@ Note: OneShipStation will add a `CustomFieldX` child for each plugin that respon
 
 ### Installation Requirements
 
+#### CSRF Protection
+
+If you have CSRF protection enabled in your app, you will need to disable it for when ShipStation POSTs shipment notifications.
+
+In `craft/config/general.php`, if you have `enableCsrfProtection` set to true (or, in Craft 3+, if you _don't_ have it set to false), you will need to add the following:
+
+```
+return array(
+    //...
+    'enableCsrfProtection' => !isset($_REQUEST['p']) || $_REQUEST['p'] != '/actions/oneShipStation/orders/process'
+)
+```
+
+This will ensure that CSRF protection is enabled for all routes that are NOT the route ShipStation posts to.
+
 #### "Action" naming collision
 
 ShipStation and Craft have a routing collision due to their combined use of the parameter `action`.
