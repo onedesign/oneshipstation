@@ -127,7 +127,7 @@ class Oneshipstation_OrdersController extends BaseController
         $order->orderStatusId = $status->id;
         $order->message = $this->orderStatusMessageFromShipstationParams();
 
-        if (craft()->elements->saveElement($order)) {
+        if (craft()->commerce_orders->saveOrder($order)) {
 
             $shippingInformation = $this->getShippingInformationFromParams();
             if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
