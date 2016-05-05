@@ -59,8 +59,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         if ($lastModifiedObj = $order->datePaid)
             $order_xml->addChild('LastModified', date_format($lastModifiedObj, 'n/j/Y H:m'));
 
-        if ($shippingObj = $order->shippingMethod)
-            $this->addChildWithCDATA($order_xml, 'ShippingMethod', $shippingObj->handle);
+        if ($shippingMethodHandle = $order->getShippingMethodHandle())
+            $this->addChildWithCDATA($order_xml, 'ShippingMethod', $shippingMethodHandle);
         
         if ($paymentObj = $order->paymentMethod)
             $this->addChildWithCDATA($order_xml, 'PaymentMethod', $paymentObj->name);
