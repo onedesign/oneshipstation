@@ -79,7 +79,7 @@ class Oneshipstation_OrdersController extends BaseController
             $pageSize = 25;
         }
 
-        $numPages = ceil($criteria->count() / $pageSize);
+        $numPages = ceil($criteria->limit(null)->count() / $pageSize);
         $pageNum = craft()->request->getParam('page');
         if (!is_numeric($pageNum) || $pageNum < 1) {
             $pageNum = 1;
