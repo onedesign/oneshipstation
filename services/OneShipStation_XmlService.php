@@ -53,11 +53,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         ];
         $this->mapCraftModel($order_xml, $order_mapping, $order);
 
-        if ($dateOrderedObj = $order->dateOrdered)
-            $order_xml->addChild('OrderDate', date_format($dateOrderedObj, 'n/j/Y H:m'));
+        $order_xml->addChild('OrderDate', date_format($order->dateOrdered ?: $order->dateCreated, 'n/j/Y H:m'));
 
-        if ($lastModifiedObj = $order->datePaid)
-            $order_xml->addChild('LastModified', date_format($lastModifiedObj, 'n/j/Y H:m'));
+        $order_xml->addChild('LastModified', date_format($order->dateUpdated ?: $order->dateCreated, 'n/j/Y H:m'));
 
         if ($shippingMethodHandle = $order->getShippingMethodHandle())
             $this->addChildWithCDATA($order_xml, 'ShippingMethod', $shippingMethodHandle);
