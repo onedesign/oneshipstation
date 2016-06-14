@@ -151,7 +151,7 @@ One ShipStation provides a helper method to add to your template to provide cust
 {% endfor %}
 ```
 
-Current One ShipStation only provides links for common carriers. If your carrier is not defined, or if you want a different URL, you can override:
+Currently One ShipStation only provides links for common carriers. If your carrier is not defined, or if you want a different URL, you can override:
 
 ```
 class MyPlugin extends BasePlugin {
