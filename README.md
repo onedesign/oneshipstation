@@ -156,7 +156,7 @@ Currently One ShipStation only provides links for common carriers. If your carri
 ```
 class MyPlugin extends BasePlugin {
     public function oneShipStation_trackingURL($shippingInfo) {
-        return '<a href="https://mycustomlink?tracking=' . $shippingInfo->trackingNumber . '">Click to track with ' . $shippingInfo->carrier . '!</a>';
+        return 'https://mycustomlink?tracking=' . urlencode($shippingInfo->trackingNumber);
     }
 }
 ```
