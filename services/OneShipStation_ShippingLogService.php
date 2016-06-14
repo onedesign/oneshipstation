@@ -26,4 +26,27 @@ class OneShipStation_ShippingLogService extends BaseApplicationComponent {
         return false;
     }
 
+    /**
+     * Return a URL for tracking shipments
+     *
+     * Note: This is by no means an exhaustive list of services!
+     *       Override or declare your own by declaring `function oneShipStation_trackingURL($shippingInfo)` in your plugin.
+     *       If you override, ensure the URL is encoded/escaped properly.
+     */
+    public function trackingURL($shippingInfo) {
+        if ($override = craft()->plugins->callFirst('oneShipStation_trackingURL', [$shippingInfo])) {
+            return $override;
+        }
+        $safeTrackingNumber = urlencode($shippingInfo->trackingNumber);
+        switch (strtolower($shippingInfo->carrier)) {
+            case 'ups':
+                return "http://wwwapps.ups.com/WebTracking/track?track=yes&trackNums={$safeTrackingNumber}";
+            case 'usps':
+                return "https://tools.usps.com/go/TrackConfirmAction_input?qtc_tLabels1={$safeTrackingNumber}";
+            case 'fedex':
+            case 'fedexinternationalmailservice':
+                return "http://www.fedex.com/Tracking?action=track&tracknumbers={$safeTrackingNumber}";
+            default: return null;
+        }
+    }
 }

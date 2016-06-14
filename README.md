@@ -135,3 +135,28 @@ https://{yourdomain.com}/myCustomActionTrigger/oneShipStation/orders/process
 #### Case Sensitivity
 
 Note that this is case sensitive. Due to Craft's segment matching, the `oneShipStation` segment in the URL _must_ be `oneShipStation`, not `oneshipstation` or `ONESHIPSTATION`.
+
+### Miscellaneous
+
+#### Getting Tracking Information in a Template
+
+One ShipStation provides a helper method to add to your template to provide customers with a link to track their shipment.
+
+```
+{% for shipmentInfo in order.shippingInfo %}
+  {% set tracking = craft.oneShipStation.trackingNumberLinkHTML(shipmentInfo) %}
+  {% if tracking|length %}
+    Track shipment: {{ tracking|raw }}
+  {% endif %}
+{% endfor %}
+```
+
+Currently One ShipStation only provides links for common carriers. If your carrier is not defined, or if you want a different URL, you can override:
+
+```
+class MyPlugin extends BasePlugin {
+    public function oneShipStation_trackingURL($shippingInfo) {
+        return 'https://mycustomlink?tracking=' . urlencode($shippingInfo->trackingNumber);
+    }
+}
+```
