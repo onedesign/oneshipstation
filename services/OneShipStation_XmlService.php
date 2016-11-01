@@ -57,9 +57,8 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         $order_xml->addChild('LastModified', date_format($order->dateUpdated ?: $order->dateCreated, 'n/j/Y H:m'));
 
-        if ($shippingMethodHandle = $order->getShippingMethodHandle())
-            $this->addChildWithCDATA($order_xml, 'ShippingMethod', $shippingMethodHandle);
-        
+        $this->shippingMethod($order_xml, $order);
+
         if ($paymentObj = $order->paymentMethod)
             $this->addChildWithCDATA($order_xml, 'PaymentMethod', $paymentObj->name);
 
@@ -75,6 +74,26 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         $this->customOrderFields($order_xml, $order);
 
         return $order_xml;
+    }
+
+    /**
+     * Add a child with the shipping method to the order_xml, allowing plugins to override as needed
+     *
+     * @param SimpleXMLElement $order_xml the order xml to add a child to
+     * @param [Commerce_OrderModel] $order
+     * @return null
+     */
+    public function shippingMethod(\SimpleXMLElement $order_xml, $order) {
+        $shippingMethod = null;
+        if ($overrideShippingMethodCallbacks = craft()->plugins->call('oneShipStationShippingMethod') ) {
+            $overrideShippingMethodCallback = array_shift($overrideShippingMethodCallbacks);
+            if (is_callable($overrideShippingMethodCallback)) {
+                $shippingMethod = $overrideShippingMethodCallback($order);
+            }
+        }
+        if (!is_null($shippingMethod) || ($shippingMethod = $order->getShippingMethodHandle())) {
+            $this->addChildWithCDATA($order_xml, 'ShippingMethod', $shippingMethod);
+        }
     }
 
     /**
