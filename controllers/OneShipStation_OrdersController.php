@@ -79,7 +79,7 @@ class Oneshipstation_OrdersController extends BaseController
             $pageSize = 25;
         }
 
-        $numPages = ceil($this->getEfficientCount($criteria) / $pageSize);
+        $numPages = ceil($criteria->total() / $pageSize);
         $pageNum = craft()->request->getParam('page');
         if (!is_numeric($pageNum) || $pageNum < 1) {
             $pageNum = 1;
@@ -89,23 +89,6 @@ class Oneshipstation_OrdersController extends BaseController
         $criteria->offset = ($pageNum - 1) * $pageSize;
 
         return $numPages;
-    }
-
-    /**
-     * $criteria->count() builds all objects and calls count($objects).
-     * that's terrible. passing true as the second param gets only IDs.
-     * this is the best quick solution i could find without modifying craft source.
-     * ideally, $criteria->count() would execute a `SELECT COUNT(*) FROM ...` to
-     * avoid even needing the big array of IDs.
-     *
-     * TODO: get Craft to update ElementCriteriaModel::count()
-     *
-     * @param ElementCriteriaModel
-     * @return Int
-     */
-    protected function getEfficientCount($criteria) {
-        $elements = craft()->elements->findElements($criteria->limit(null), true);
-        return count($elements);
     }
 
     /**
