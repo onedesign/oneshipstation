@@ -94,6 +94,29 @@ class MyPlugin extends BasePlugin {
 }
 ```
 
+### Overriding Shipping Method
+
+By default, One Shipstation will send the shipping method handle to Shipstation for the `ShippingMethod` on each order.
+
+You can override this very much like you'd add a custom field or internal notes above. In your plugin, define a function `oneShipStationShippingMethod()`,
+which returns a callback that takes an order and returns a string. For example, if you want the ShippingMethod to be called `Ground` for all customers in the US,
+you could declare a method as follows:
+
+```
+class MyPlugin extends BasePlugin {
+    //...
+    public function oneShipStationShippingMethod() {
+        return function($order) {
+            if ($order->getShippingAddress()->country == 'US') {
+                return 'Ground';
+            }
+        }
+    }
+}
+```
+
+If you return null or void, OneShipstation will assign the shipping method to be the shipping method handle, as default.
+
 ### Installation Requirements
 
 #### CSRF Protection
