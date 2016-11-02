@@ -1,4 +1,33 @@
-<h3>Info submitted will allow ShipStation to begin communicating with Craft.</h3>
+<div>
+    <h3>ShipStation Configuration</h3>
+    <p>
+        ShipStation's custom store integration works by requesting orders from One ShipStation (shipped and unshipped),
+        and then by notifying One ShipStation when an order has been shipped.
+    </p>
+
+    <h4>Custom Store</h4>
+    <p>
+      Once you've configured One ShipStation's settings below, create a <i>custom store</i> in ShipStation.
+      You'll need to provide ShipStation with:
+    </p>
+    <ul style="list-style-type:disc;margin-left:20px;">
+        <li>Username for ShipStation to retrieve/update orders</li>
+        <li>Password for ShipStation to retrieve/update orders</li>
+        <li>XML Page URL</li>
+        <li>Order Statuses (optional)</li>
+    </ul>
+
+    <h4>Order Statuses</h4>
+    <p>
+        If you have defined custom order statuses, you will need to define them in ShipStation accordingly.
+        By default, Craft Commerce uses "processing" for "Awaiting Shipment Statuses" in ShipStation, and "shipped" for "Shipped Statuses".
+        Other ShipStation statuses can be left as is, as Commerce doesn't have any corresponding statuses. See below for the statuses currently enabled.
+    </p>
+</div>
+
+<hr />
+
+<h3>Settings</h3>
 
 <div class="field">
     <div class="heading">
@@ -48,11 +77,29 @@
     </div>
 </div>
 
-<hr />
+<div class="field">
+    <div class="heading">
+        <label>Commerce Order Statuses</label>
+        <div class="instructions">
+            <p>Set your Custom Store's Order Statuses according to your business process and the statuses enabled in Craft Commerce</p>
+        </div>
+    </div>
+    <ul style="list-style-type:disc;margin-left:20px;">
+        {% for status in craft.commerce.getOrderStatuses %}
+        <li>{{ status.name }} &mdash; <code>{{ status.handle }}</code></li>
+        {% endfor %}
+    </ul>
+</div>
 
 <div class="field">
     <div class="heading">
-        <p>URL to custom XML Page should be:</p>
+        <label>XML Page URL</label>
+        <div class="instructions">
+            <p>When setting up your ShipStation Custom Store, enter this URL so ShipStation can retrieve and update orders.</p>
+        </div>
+    </div>
+    <div class="input">
+        <br />
         <pre><code>{{ siteUrl }}actions/oneShipStation/orders/process</code></pre>
     </div>
 </div>
