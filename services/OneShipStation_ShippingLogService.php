@@ -12,7 +12,8 @@ class OneShipStation_ShippingLogService extends BaseApplicationComponent {
      */
     public function logShippingInformation($order, $attributes) {
         $infoMatrix = craft()->fields->getFieldByHandle('shippingInfo');
-        $blockType  = array_shift(craft()->matrix->getBlockTypesByFieldId($infoMatrix->id));
+        $blockTypes = craft()->matrix->getBlockTypesByFieldId($infoMatrix->id);
+        $blockType  = array_shift($blockTypes);
 
         if ($infoMatrix && $blockType && $order) {
             $block = new MatrixBlockModel();
