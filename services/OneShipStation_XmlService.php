@@ -264,7 +264,13 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      * @return SimpleXMLElement
      */
     public function customOrderFields(\SimpleXMLElement $order_xml, Commerce_OrderModel $order) {
-        $customFields = ['CustomField1', 'CustomField2', 'CustomField3', 'InternalNotes'];
+        $customFields = [
+            'CustomField1',
+            'CustomField2',
+            'CustomField3',
+            'InternalNotes',
+            'Gift',
+            'GiftMessage'];
         foreach ($customFields as $fieldName) {
             if ($customFieldCallbacks = craft()->plugins->call("oneShipStation{$fieldName}")) {
                 foreach ($customFieldCallbacks as $callback) {
