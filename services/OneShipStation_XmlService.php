@@ -269,6 +269,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             'CustomField2',
             'CustomField3',
             'InternalNotes',
+            'CustomerNotes',
             'Gift',
             'GiftMessage'];
         foreach ($customFields as $fieldName) {
