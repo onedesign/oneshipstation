@@ -62,8 +62,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         if ($paymentObj = $order->paymentMethod)
             $this->addChildWithCDATA($order_xml, 'PaymentMethod', $paymentObj->name);
 
-        $item_xml = $this->items($order_xml, $order->getLineItems());
-
+        $items_xml = $this->items($order_xml, $order->getLineItems());
+        $this->discount($items_xml, $order);
+        
         $customer = $order->getCustomer();
         $customer_xml = $this->customer($order_xml, $customer);
 
@@ -110,7 +111,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             $this->item($items_xml, $item);
         }
 
-        return $xml;
+        return $items_xml;
     }
 
     /**
@@ -142,6 +143,35 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         }
 
         return $item_xml;
+    }
+
+    /**
+     * Discounts (a.k.a. coupons) are added as items
+     * @param  SimpleXMLElement      $xml  [description]
+     * @param  Commerce_OrderModel $order [description]
+     * @param  string                 $name [description]
+     * @return [type]                       [description]
+     */
+    public function discount(\SimpleXMLElement $xml, Commerce_OrderModel $order, $name='Item') {
+        // If no discount was applied, skip this
+        if ($order->getTotalDiscount() >= 0) {
+            return;
+        }
+
+        $discount_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
+
+        $discount_mapping = [
+            'SKU'        => ['callback' => function($order) { return ''; }, 'cdata' => false],
+            'Name'       => 'couponCode',
+            'Quantity'   => ['callback' => function($order) { return 1; }, 'cdata' => false],
+            'UnitPrice'  => [
+                'callback' => function($order) { return number_format($order->getTotalDiscount(), 2); },
+                'cdata' => false],
+            'Adjustment' => ['callback' => function($order) { return 'true'; }, 'cdata' => false],
+        ];
+        $this->mapCraftModel($discount_xml, $discount_mapping, $order);
+
+        return $discount_xml;
     }
 
     /**
@@ -344,8 +374,12 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             $value = $options($model);
         }
         //if value is an attribute on the model, passed as a string field name
-        else if (!is_array($options)) {
+        else if (is_string($options)) {
             $value = $model->{$options};
+        }
+        // if null, leave blank
+        else if (is_null($options)) {
+            $value = '';
         }
 
         if ($value === true || $value === false) {
