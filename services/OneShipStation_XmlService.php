@@ -374,8 +374,12 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             $value = $options($model);
         }
         //if value is an attribute on the model, passed as a string field name
-        else if (!is_array($options)) {
+        else if (is_string($options)) {
             $value = $model->{$options};
+        }
+        // if null, leave blank
+        else if (is_null($options)) {
+            $value = '';
         }
 
         if ($value === true || $value === false) {
