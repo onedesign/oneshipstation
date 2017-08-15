@@ -28,7 +28,7 @@ class OneShipStationPlugin extends BasePlugin {
         return 'https://onedesigncompany.com';
     }
 
-    public function onBeforeInstall() {
+    protected function doDepChecks() {
         // require Craft 2.5+
         if (version_compare(craft()->getVersion(), '2.5', '<')) {
             throw new Exception('One ShipStation requires Craft CMS 2.5+ in order to run.');
@@ -44,10 +44,13 @@ class OneShipStationPlugin extends BasePlugin {
             throw new Exception('One ShipStation requires Craft Commerce 1.0+.');
         }
 
-        if (!extension_loaded('xml')) {
+        if (extension_loaded('xml')) {
             throw new Exception('One ShipStation requires the xml extension to be installed.');
         }
+    }
 
+    public function onBeforeInstall() {
+        $this->doDepChecks();
         return true;
     }
 
@@ -58,6 +61,10 @@ class OneShipStationPlugin extends BasePlugin {
     public function createTables() {}
 
     public function dropTables() {}
+
+    public function init() {
+        $this->doDepChecks();
+    }
 
     /*
      * WARNING: Do not register any routes that ShipStation will use here.
