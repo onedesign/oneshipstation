@@ -59,12 +59,13 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         $this->shippingMethod($order_xml, $order);
 
-        if ($paymentObj = $order->paymentMethod)
+        if ($paymentObj = $order->paymentMethod) {
             $this->addChildWithCDATA($order_xml, 'PaymentMethod', $paymentObj->name);
+        }
 
         $items_xml = $this->items($order_xml, $order->getLineItems());
         $this->discount($items_xml, $order);
-        
+
         $customer = $order->getCustomer();
         $customer_xml = $this->customer($order_xml, $customer);
 
@@ -135,7 +136,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                                                 'cdata' => false]
         ];
         $this->mapCraftModel($item_xml, $item_mapping, $item);
- 
+
         $item_xml->addChild('WeightUnits', 'Grams');
 
         if (isset($item->snapshot['options'])) {
