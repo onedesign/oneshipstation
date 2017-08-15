@@ -36,14 +36,16 @@ class OneShipStationPlugin extends BasePlugin {
 
         // require PHP 5.4+
         if (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50400) {
-            Craft::log('One ShipStation requires PHP 5.4+ in order to run.', LogLevel::Error);
-            return false;
+            throw new Exception('One ShipStation requires PHP 5.4+ in order to run.');
         }
 
         // require Craft Commerce 1.0+
         if (!($commerce = craft()->plugins->getPlugin('commerce')) || version_compare($commerce->getVersion(), '1.0', '<')) {
-            Craft::log('One ShipStation requires Craft Commerce 1.0+.', LogLevel::Error);
-            return false;
+            throw new Exception('One ShipStation requires Craft Commerce 1.0+.');
+        }
+
+        if (!extension_loaded('xml')) {
+            throw new Exception('One ShipStation requires the xml extension to be installed.');
         }
 
         return true;
