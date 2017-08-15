@@ -44,7 +44,7 @@ class OneShipStationPlugin extends BasePlugin {
             throw new Exception('One ShipStation requires Craft Commerce 1.0+.');
         }
 
-        if (extension_loaded('xml')) {
+        if (!extension_loaded('xml')) {
             throw new Exception('One ShipStation requires the xml extension to be installed.');
         }
     }
