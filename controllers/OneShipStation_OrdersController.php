@@ -27,10 +27,10 @@ class Oneshipstation_OrdersController extends BaseController
                     throw new HttpException(400);
             }
         } catch (ErrorException $e) {
-            Craft::log($e->getMessage(), LogLevel::Error, true);
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
             return $this->returnErrorJson($e->getMessage());
         } catch (Exception $e) {
-            Craft::log($e->getMessage(), LogLevel::Error, true);
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
             return $this->returnErrorJson($e->getMessage());
         }
     }
