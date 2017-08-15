@@ -15,8 +15,7 @@ class Oneshipstation_OrdersController extends BaseController
      */
     public function actionProcess(array $variables=[]) {
         if (!$this->authenticate()) {
-            return $this->returnErrorJson('Invalid username/password.');
-            throw new HttpException(401);
+            return $this->returnErrorJson('Invalid OneShipStation username or password.');
         }
         try {
             switch (craft()->request->getParam('action')) {
@@ -25,7 +24,7 @@ class Oneshipstation_OrdersController extends BaseController
                 case 'shipnotify':
                     return $this->postShipment();
                 default:
-                    throw new HttpException(400);
+                    throw new HttpException(400, 'No action set. Set the ?action= parameter as `export` or `shipnotify`.');
             }
         } catch (ErrorException $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
@@ -33,6 +32,12 @@ class Oneshipstation_OrdersController extends BaseController
         } catch (Exception $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
             return $this->returnErrorJson($e->getMessage());
+        } catch (HttpException $e) {
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            return $this->returnErrorJson(array(
+                'code' => $e->statusCode,
+                'error' => $e->getMessage(),
+            ));
         }
     }
 
