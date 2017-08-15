@@ -17,13 +17,18 @@ class Oneshipstation_OrdersController extends BaseController
         if (!$this->authenticate()) {
             throw new HttpException(401);
         }
-        switch (craft()->request->getParam('action')) {
-            case 'export':
-                return $this->getOrders();
-            case 'shipnotify':
-                return $this->postShipment();
-            default:
-                throw new HttpException(400);
+        try {
+            switch (craft()->request->getParam('action')) {
+                case 'export':
+                    return $this->getOrders();
+                case 'shipnotify':
+                    return $this->postShipment();
+                default:
+                    throw new HttpException(400);
+            }
+        } catch (Exception $e) {
+            Craft::log($e->getMessage(), LogLevel::Error, true);
+            return $this->returnErrorJson($e->getMessage());
         }
     }
 
@@ -105,7 +110,7 @@ class Oneshipstation_OrdersController extends BaseController
                     return date('Y-m-d H:i:s', $date);
                 else
                     return date('Y-m-d H:i:59', $date);
-            }  
+            }
         }
         return null;
     }
@@ -122,21 +127,22 @@ class Oneshipstation_OrdersController extends BaseController
         $order = $this->orderFromParams();
 
         $status = craft()->commerce_orderStatuses->getOrderStatusByHandle('shipped');
-        if (!$status) { throw new ErrorException("Failed to find Commerce OrderStatus 'Shipped'"); }
+        if (!$status) {
+            throw new ErrorException("Failed to find Commerce OrderStatus 'Shipped'");
+        }
 
         $order->orderStatusId = $status->id;
         $order->message = $this->orderStatusMessageFromShipstationParams();
 
         if (craft()->commerce_orders->saveOrder($order)) {
-
             $shippingInformation = $this->getShippingInformationFromParams();
             if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
-                Craft::log('Logging shipping information failed');
+                throw new ErrorException('Logging shipping information failed for order ' . $order->id);
             }
 
             $this->returnJson(['success' => true]); //TODO return 200 success
         } else {
-            throw new ErrorException('Failed to save order');
+            throw new ErrorException('Failed to save order with id ' . $order->id);
         }
     }
 
