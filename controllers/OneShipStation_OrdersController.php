@@ -15,6 +15,7 @@ class Oneshipstation_OrdersController extends BaseController
      */
     public function actionProcess(array $variables=[]) {
         if (!$this->authenticate()) {
+            return $this->returnErrorJson('Invalid username/password.');
             throw new HttpException(401);
         }
         try {
