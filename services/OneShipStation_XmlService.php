@@ -125,7 +125,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $name='Item') {
         $item_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $item_mapping = ['SKU'              => ['callback' => function($item) { return $item->getPurchasable()->sku; }],
+        $item_mapping = ['SKU'              => ['callback' => function($item) { return $item->snapshot['sku']; }],
                          'Name'             => 'description',
                          'Weight'           => ['callback' => function($item) { return round($item->weight, 2); },
                                                 'cdata' => false],
