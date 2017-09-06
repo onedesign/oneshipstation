@@ -29,15 +29,15 @@ class Oneshipstation_OrdersController extends BaseController
         } catch (ErrorException $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
             return $this->returnErrorJson($e->getMessage());
-        } catch (Exception $e) {
-            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
-            return $this->returnErrorJson($e->getMessage());
         } catch (HttpException $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
             return $this->returnErrorJson(array(
                 'code' => $e->statusCode,
                 'error' => $e->getMessage(),
             ));
+        } catch (Exception $e) {
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            return $this->returnErrorJson($e->getMessage());
         }
     }
 
