@@ -11,7 +11,7 @@ class Oneshipstation_OrdersController extends BaseController
      */
     function handleError($severity, $message, $filename, $lineno) {
       if (error_reporting() & $severity) {
-        throw new ErrorException($message, $severity);
+        throw new ErrorException(implode(array($message, basename($filename), $lineno), ': '), $severity);
       }
     }
 
