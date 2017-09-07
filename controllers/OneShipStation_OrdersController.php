@@ -26,10 +26,11 @@ class Oneshipstation_OrdersController extends BaseController
     public function actionProcess(array $variables=[]) {
         set_error_handler(array($this, 'handleError'));
 
-        if (!$this->authenticate()) {
-            return $this->returnErrorJson('Invalid OneShipStation username or password.');
-        }
         try {
+            if (!$this->authenticate()) {
+                throw new HttpException(401, 'Invalid OneShipStation username or password.');
+            }
+
             switch (craft()->request->getParam('action')) {
                 case 'export':
                     return $this->getOrders();
@@ -40,18 +41,18 @@ class Oneshipstation_OrdersController extends BaseController
             }
         } catch (ErrorException $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            HeaderHelper::setHeader("HTTP/1.0 500");
             return $this->returnErrorJson($e->getMessage());
         } catch (HttpException $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            HeaderHelper::setHeader("HTTP/1.0 {$e->statusCode}");
             return $this->returnErrorJson(array(
                 'code' => $e->statusCode,
-                'error' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ));
         } catch (Exception $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
-            return $this->returnErrorJson($e->getMessage());
-        } catch (ErrorException $e) {
-            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            HeaderHelper::setHeader("HTTP/1.0 500");
             return $this->returnErrorJson($e->getMessage());
         }
     }
