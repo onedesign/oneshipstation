@@ -6,6 +6,16 @@ class Oneshipstation_OrdersController extends BaseController
     protected $allowAnonymous = true;
 
     /**
+     * Override Craft's error handler because it returns HTML that ShipStation cuts off
+     * So, this will throw an exception with the error message in order to output JSON
+     */
+    function handleError($severity, $message, $filename, $lineno) {
+      if (error_reporting() & $severity) {
+        throw new ErrorException(implode(array($message, basename($filename), $lineno), ': '), $severity);
+      }
+    }
+
+    /**
      * ShipStation will hit this action for processing orders, both POSTing and GETting.
      *   ShipStation will send a GET param 'action' of either shipnotify or export.
      *   If this is not found or is any other string, this will throw a 400 exception.
@@ -14,16 +24,36 @@ class Oneshipstation_OrdersController extends BaseController
      * @throws HttpException for malformed requests
      */
     public function actionProcess(array $variables=[]) {
-        if (!$this->authenticate()) {
-            throw new HttpException(401);
-        }
-        switch (craft()->request->getParam('action')) {
-            case 'export':
-                return $this->getOrders();
-            case 'shipnotify':
-                return $this->postShipment();
-            default:
-                throw new HttpException(400);
+        set_error_handler(array($this, 'handleError'));
+
+        try {
+            if (!$this->authenticate()) {
+                throw new HttpException(401, 'Invalid OneShipStation username or password.');
+            }
+
+            switch (craft()->request->getParam('action')) {
+                case 'export':
+                    return $this->getOrders();
+                case 'shipnotify':
+                    return $this->postShipment();
+                default:
+                    throw new HttpException(400, 'No action set. Set the ?action= parameter as `export` or `shipnotify`.');
+            }
+        } catch (ErrorException $e) {
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            HeaderHelper::setHeader("HTTP/1.0 500");
+            return $this->returnErrorJson($e->getMessage());
+        } catch (HttpException $e) {
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            HeaderHelper::setHeader("HTTP/1.0 {$e->statusCode}");
+            return $this->returnErrorJson(array(
+                'code' => $e->statusCode,
+                'message' => $e->getMessage(),
+            ));
+        } catch (Exception $e) {
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            HeaderHelper::setHeader("HTTP/1.0 500");
+            return $this->returnErrorJson($e->getMessage());
         }
     }
 
@@ -52,7 +82,10 @@ class Oneshipstation_OrdersController extends BaseController
      */
     protected function getOrders() {
         $criteria = craft()->elements->getCriteria('Commerce_Order');
-        if ($start_date = $this->parseDate('start_date') && $end_date = $this->parseDate('end_date')) {
+        $start_date = $this->parseDate('start_date');
+        $end_date = $this->parseDate('end_date');
+
+        if ($start_date && $end_date) {
             $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
         }
         $criteria->orderStatusId = true;
@@ -105,7 +138,7 @@ class Oneshipstation_OrdersController extends BaseController
                     return date('Y-m-d H:i:s', $date);
                 else
                     return date('Y-m-d H:i:59', $date);
-            }  
+            }
         }
         return null;
     }
@@ -122,21 +155,22 @@ class Oneshipstation_OrdersController extends BaseController
         $order = $this->orderFromParams();
 
         $status = craft()->commerce_orderStatuses->getOrderStatusByHandle('shipped');
-        if (!$status) { throw new ErrorException("Failed to find Commerce OrderStatus 'Shipped'"); }
+        if (!$status) {
+            throw new ErrorException("Failed to find Commerce OrderStatus 'Shipped'");
+        }
 
         $order->orderStatusId = $status->id;
         $order->message = $this->orderStatusMessageFromShipstationParams();
 
         if (craft()->commerce_orders->saveOrder($order)) {
-
             $shippingInformation = $this->getShippingInformationFromParams();
             if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
-                Craft::log('Logging shipping information failed');
+                throw new ErrorException('Logging shipping information failed for order ' . $order->id);
             }
 
             $this->returnJson(['success' => true]); //TODO return 200 success
         } else {
-            throw new ErrorException('Failed to save order');
+            throw new ErrorException('Failed to save order with id ' . $order->id);
         }
     }
 
