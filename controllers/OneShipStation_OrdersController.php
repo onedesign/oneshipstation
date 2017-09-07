@@ -84,9 +84,6 @@ class Oneshipstation_OrdersController extends BaseController
         $start_date = $this->parseDate('start_date');
         $end_date = $this->parseDate('end_date');
 
-        $myArray = [];
-        $myArray->error;
-
         if ($start_date && $end_date) {
             $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
         }
