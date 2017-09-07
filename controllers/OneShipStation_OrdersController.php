@@ -66,9 +66,14 @@ class Oneshipstation_OrdersController extends BaseController
      */
     protected function getOrders() {
         $criteria = craft()->elements->getCriteria('Commerce_Order');
-        if ($start_date = $this->parseDate('start_date') && $end_date = $this->parseDate('end_date')) {
+
+        $start_date = $this->parseDate('start_date');
+        $end_date = $this->parseDate('end_date');
+
+        if ($start_date && $end_date) {
             $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
         }
+
         $criteria->orderStatusId = true;
 
         $num_pages = $this->paginateOrders($criteria);
