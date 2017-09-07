@@ -6,6 +6,16 @@ class Oneshipstation_OrdersController extends BaseController
     protected $allowAnonymous = true;
 
     /**
+     * Override Craft's error handler because it returns HTML that ShipStation cuts off
+     * So, this will throw an exception with the error message in order to output JSON
+     */
+    function handleError($severity, $message, $filename, $lineno) {
+      if (error_reporting() & $severity) {
+        throw new ErrorException($message, $severity);
+      }
+    }
+
+    /**
      * ShipStation will hit this action for processing orders, both POSTing and GETting.
      *   ShipStation will send a GET param 'action' of either shipnotify or export.
      *   If this is not found or is any other string, this will throw a 400 exception.
@@ -14,6 +24,8 @@ class Oneshipstation_OrdersController extends BaseController
      * @throws HttpException for malformed requests
      */
     public function actionProcess(array $variables=[]) {
+        set_error_handler(array($this, 'handleError'));
+
         if (!$this->authenticate()) {
             return $this->returnErrorJson('Invalid OneShipStation username or password.');
         }
@@ -36,6 +48,9 @@ class Oneshipstation_OrdersController extends BaseController
                 'error' => $e->getMessage(),
             ));
         } catch (Exception $e) {
+            OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
+            return $this->returnErrorJson($e->getMessage());
+        } catch (ErrorException $e) {
             OneShipStationPlugin::log($e->getMessage(), LogLevel::Error, true);
             return $this->returnErrorJson($e->getMessage());
         }
@@ -66,14 +81,15 @@ class Oneshipstation_OrdersController extends BaseController
      */
     protected function getOrders() {
         $criteria = craft()->elements->getCriteria('Commerce_Order');
-
         $start_date = $this->parseDate('start_date');
         $end_date = $this->parseDate('end_date');
+
+        $myArray = [];
+        $myArray->error;
 
         if ($start_date && $end_date) {
             $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
         }
-
         $criteria->orderStatusId = true;
 
         $num_pages = $this->paginateOrders($criteria);
