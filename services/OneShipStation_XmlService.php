@@ -108,8 +108,38 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      */
     public function items(\SimpleXMLElement $xml, $items, $name='Items') {
         $items_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
+
+		// Get Weight Units setting from Craft Commerce
+		$weight_setting = craft()->plugins->getPlugin('commerce')->getSettings()->weightUnits;
+		$weight_units = [];
+		switch ($weight_setting) {
+			case 'g':
+				$weight_units = [
+					'commerce'	=> 'g',
+					'xml'		=> 'Grams'
+				];
+				break;
+			case 'kg':
+				$weight_units = [
+					'commerce'	=> 'kg',
+					'xml'		=> 'Grams'
+				];
+				break;
+			case 'lb':
+				$weight_units = [
+					'commerce'	=> 'lb',
+					'xml'		=> 'Pounds'
+				];
+				break;
+			default:
+				$weight_units = [
+					'commerce'	=> 'g',
+					'xml'		=> 'Grams'
+				];
+		}
+
         foreach ($items as $item) {
-            $this->item($items_xml, $item);
+            $this->item($items_xml, $item, $weight_units);
         }
 
         return $items_xml;
@@ -120,24 +150,31 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      *
      * @param SimpleXMLElement $xml the xml to add a child to or modify
      * @param Commerce_LineItemModel $item
+	 * @param Array $weight_units array containing Commerce weight units and corresponding units for ShipStation XML
      * @param String $name the name of the child node, default 'Item'
      * @return SimpleXMLElement
      */
-    public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $name='Item') {
+    public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $weight_units, $name='Item') {
         $item_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
         $item_mapping = ['SKU'              => ['callback' => function($item) { return $item->snapshot['sku']; }],
                          'Name'             => 'description',
-                         'Weight'           => ['callback' => function($item) { return round($item->weight, 2); },
+                         'Weight'           => ['callback' => function($item, $weight_units) { if ($weight_units['commerce'] == 'kg') {
+												 														$g_weight = $item->weight * 1000;
+																										return round($g_weight, 2);
+																									} else {
+																										return round($item->weight, 2);
+																									}
+																							 },
                                                 'cdata' => false],
                          'Quantity'         => ['field' => 'qty',
                                                 'cdata' => false],
                          'UnitPrice'        => ['callback' => function($item) { return round($item->salePrice, 2); },
                                                 'cdata' => false]
         ];
-        $this->mapCraftModel($item_xml, $item_mapping, $item);
+        $this->mapCraftModel($item_xml, $item_mapping, $item, $weight_units);
 
-        $item_xml->addChild('WeightUnits', 'Grams');
+        $item_xml->addChild('WeightUnits', $weight_units['xml']);
 
         if (isset($item->snapshot['options'])) {
             $option_xml = $this->options($item_xml, $item->snapshot['options']);
@@ -318,9 +355,9 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
     /***************************** helpers *******************************/
 
-    protected function mapCraftModel($xml, $mapping, $model) {
+    protected function mapCraftModel($xml, $mapping, $model, $units=NULL) {
         foreach ($mapping as $name => $attr) {
-            $value = $this->valueFromMappingAndModel($attr, $model);
+            $value = $this->valueFromMappingAndModel($attr, $model, $units);
 
             //wrap in cdata unless explicitly set not to
             if (!is_array($attr) || !array_key_exists('cdata', $attr) || $attr['cdata']) {
@@ -357,7 +394,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
      *   @param BaseModel $model, an instance of a craft model
      *   @return string
      */
-    protected function valueFromMappingAndModel($options, $model) {
+    protected function valueFromMappingAndModel($options, $model, $units) {
         $value = null;
 
         //if field name exists in the options array
@@ -368,7 +405,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
         //if value is coming from a callback in the options array
         else if (is_array($options) && array_key_exists('callback', $options)) {
             $callback = $options['callback'];
-            $value = $callback($model);
+            $value = $callback($model, $units);
         }
         //if value is a callback
         else if (is_object($options) && is_callable($options)) {
