@@ -230,7 +230,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                 $name = ($user->firstName && $user->lastName) ? "{$user->firstName} {$user->lastName}" : 'unknown';
             }
             $this->addChildWithCDATA($billTo_xml, 'Name', $name);
-            $billTo_xml->addChild('Email', $customer->email);
+            $billTo_xml->addChild('Email', $order->email);
 
             return $billTo_xml;
         }
