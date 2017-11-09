@@ -126,18 +126,50 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
     public function item(\SimpleXMLElement $xml, Commerce_LineItemModel $item, $name='Item') {
         $item_xml = $xml->getName() == $name ? $xml : $xml->addChild($name);
 
-        $item_mapping = ['SKU'              => ['callback' => function($item) { return $item->snapshot['sku']; }],
-                         'Name'             => 'description',
-                         'Weight'           => ['callback' => function($item) { return round($item->weight, 2); },
-                                                'cdata' => false],
-                         'Quantity'         => ['field' => 'qty',
-                                                'cdata' => false],
-                         'UnitPrice'        => ['callback' => function($item) { return round($item->salePrice, 2); },
-                                                'cdata' => false]
+        $item_mapping = [
+            'SKU' => [
+                'callback' => function($item) {
+                    return $item->snapshot['sku'];
+                }
+            ],
+            'Name' => 'description',
+            'Weight' => [
+                'callback' => function($item) {
+                    $weight_units = craft()->plugins->getPlugin('commerce')->getSettings()->weightUnits;
+
+                    if ($weight_units == 'kg') {
+                        // kilograms need to be converted to grams for ShipStation
+                        return round($item->weight * 1000, 2);
+                    }
+
+                    return round($item->weight, 2);
+                },
+                'cdata' => false
+            ],
+            'Quantity' => [
+                'field' => 'qty',
+                'cdata' => false
+            ],
+            'UnitPrice' => [
+                'callback' => function($item) {
+                    return round($item->salePrice, 2);
+                },
+                'cdata' => false
+            ]
         ];
         $this->mapCraftModel($item_xml, $item_mapping, $item);
 
-        $item_xml->addChild('WeightUnits', 'Grams');
+        switch(craft()->plugins->getPlugin('commerce')->getSettings()->weightUnits) {
+            case 'lb':
+                $ss_weight_units = 'Pounds';
+                break;
+            case 'kg':
+            case 'g':
+            default:
+                $ss_weight_units = 'Grams';
+        }
+
+        $item_xml->addChild('WeightUnits', $ss_weight_units);
 
         if (isset($item->snapshot['options'])) {
             $option_xml = $this->options($item_xml, $item->snapshot['options']);
