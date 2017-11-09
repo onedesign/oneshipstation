@@ -161,15 +161,15 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
 
         switch(craft()->plugins->getPlugin('commerce')->getSettings()->weightUnits) {
             case 'lb':
-                $weight_units = 'Pounds';
+                $ss_weight_units = 'Pounds';
                 break;
             case 'kg':
             case 'g':
             default:
-                $weight_units = 'Grams';
+                $ss_weight_units = 'Grams';
         }
 
-        $item_xml->addChild('WeightUnits', $weight_units);
+        $item_xml->addChild('WeightUnits', $ss_weight_units);
 
         if (isset($item->snapshot['options'])) {
             $option_xml = $this->options($item_xml, $item->snapshot['options']);
