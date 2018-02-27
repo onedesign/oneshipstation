@@ -88,7 +88,9 @@ class Oneshipstation_OrdersController extends BaseController
         if ($start_date && $end_date) {
             $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
         }
-        $criteria->orderStatusId = true;
+
+        // null orderStatusId means the order is only a cart
+        $criteria->orderStatusId = 'not null';
 
         $num_pages = $this->paginateOrders($criteria);
 
