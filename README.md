@@ -16,7 +16,7 @@ Add OneShipStation to your `composer.json` file:
     ],
 
     "require": {
-        "onedesign/oneshipstation": "0.1",
+        "onedesign/oneshipstation": "^0.2",
     }
 }
 ```
