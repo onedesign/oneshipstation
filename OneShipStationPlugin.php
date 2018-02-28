@@ -9,7 +9,7 @@ class OneShipStationPlugin extends BasePlugin {
     }
 
     public function getVersion() {
-        return '0.2.17';
+        return '0.2.25';
     }
 
     public function getSchemaVersion() {
@@ -17,7 +17,7 @@ class OneShipStationPlugin extends BasePlugin {
     }
 
     public function getDocumentationUrl() {
-        return 'https://onedesigncompany.com/craft-cms/plugins/craft-shipstation-plugin';
+        return 'https://github.com/onedesign/oneshipstation';
     }
 
     public function getDeveloper() {

@@ -164,13 +164,12 @@ class Oneshipstation_OrdersController extends BaseController
 
         $order->orderStatusId = $status->id;
         $order->message = $this->orderStatusMessageFromShipstationParams();
+        $shippingInformation = $this->getShippingInformationFromParams();
+        if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
+            OneShipStationPlugin::log('Logging shipping information failed for order ' . $order->id, LogLevel::Error, true);
+        }
 
         if (craft()->commerce_orders->saveOrder($order)) {
-            $shippingInformation = $this->getShippingInformationFromParams();
-            if (!craft()->oneShipStation_shippingLog->logShippingInformation($order, $shippingInformation)) {
-                throw new ErrorException('Logging shipping information failed for order ' . $order->id);
-            }
-
             $this->returnJson(['success' => true]);
         } else {
             throw new ErrorException('Failed to save order with id ' . $order->id);
