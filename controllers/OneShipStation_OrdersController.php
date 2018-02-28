@@ -72,13 +72,9 @@ class Oneshipstation_OrdersController extends BaseController
     }
 
     /**
-     * Renders a big XML file of all orders in a format described by ShipStation
-     * Note: this should probably get orders using Craft Commerce's variable/service if possible
+     * Returns a big XML object of all orders in a format described by ShipStation
      *
-     * @param DateTime $start
-     * @param DateTime $end
-     *
-     * @return Commerce_OrderModel[]|null
+     * @return SimpleXMLElement Orders XML
      */
     protected function getOrders() {
         $criteria = craft()->elements->getCriteria('Commerce_Order');
@@ -91,6 +87,9 @@ class Oneshipstation_OrdersController extends BaseController
 
         // null orderStatusId means the order is only a cart
         $criteria->orderStatusId = 'not null';
+
+        // Order the results to be consistent across pages
+        $criteria->order = 'dateOrdered asc';
 
         $num_pages = $this->paginateOrders($criteria);
 
@@ -146,8 +145,10 @@ class Oneshipstation_OrdersController extends BaseController
     }
 
     /**
-     * Updates order status for a given order, as posted here by ShipStation.
-     * The order is found using GET param order_number.
+     * Updates order status for a given order. This is called by ShipStation.
+     * The order is found using the query param `order_number`.
+     *
+     * TODO: This assumes there is a "shipped" handle for an order status
      *
      * See craft/plugins/commerce/controllers/Commerce_OrdersController.php#actionUpdateStatus() for details
      *
@@ -170,7 +171,7 @@ class Oneshipstation_OrdersController extends BaseController
                 throw new ErrorException('Logging shipping information failed for order ' . $order->id);
             }
 
-            $this->returnJson(['success' => true]); //TODO return 200 success
+            $this->returnJson(['success' => true]);
         } else {
             throw new ErrorException('Failed to save order with id ' . $order->id);
         }
