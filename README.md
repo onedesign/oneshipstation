@@ -1,54 +1,63 @@
 # One ShipStation
 
-Integrate Craft Commerce with ShipStation.
+Integrates Craft Commerce with [ShipStation](https://www.shipstation.com/).
+
 
 ## Installation
 
-Add OneShipStation to your `composer.json` file:
+1. Use composer to install this package:
 
 ```
-{
-    "repositories": [
-        {
-            "type": "git",
-            "url": "git@github.com:onedesign/oneshipstation.git"
-        }
-    ],
-
-    "require": {
-        "onedesign/oneshipstation": "^0.2",
-    }
-}
+composer require onedesign/oneshipstation
 ```
 
-Then run `composer install`. Go to the Craft Control Panel to install and configure.
+2. Go to the Craft control panel plugin page to install and configure the plugin.
 
-## Testing
 
-Run tests using PHPUnit, as installed using composer.
 
-```
-$ composer update --dev
-$ vendor/bin/phpunit tests/
-```
+## Craft Configuration
 
-Note that running a version of phpunit installed elsewhere in your `$PATH` may break. So use the one installed in the `vendor/bin/` directory.
+### CSRF Protection
 
-## Development
+If you have CSRF protection enabled in your app, you will need to disable it for when ShipStation POSTs shipment notifications.
 
-On any Craft project, navigate to `craft/plugins` and clone the repository:
+In `craft/config/general.php`, if you have `enableCsrfProtection` set to true (or, in Craft 3+, if you _don't_ have it set to false), you will need to add the following:
 
 ```
-$ cd craft/plugins
-$ git clone git@github.com:onedesign/oneshipstation.git
+return array(
+    //...
+    'enableCsrfProtection' => !isset($_REQUEST['p']) || $_REQUEST['p'] != '/actions/oneShipStation/orders/process'
+)
 ```
 
-Be sure to add `craft/plugins/oneshipstation` to your other project's gitignore, if applicable:
+This will ensure that CSRF protection is enabled for all routes that are NOT the route ShipStation posts to.
+
+### "Action" naming collision
+
+ShipStation and Craft have a routing collision due to their combined use of the parameter `action`.
+ShipStation sends requests using `?action=export` to read order data, and `?action=shipnotify` to update shipping data.
+This conflicts with Craft's reserved word `action` to describe an ["action request"](https://craftcms.com/docs/plugins/controllers#how-controller-actions-fit-into-routing),
+which is designed to allow for easier routing configuration.
+
+Because of this, the route given to ShipStation for their Custom Store integration _must_ begin with your Craft config's "actionTrigger" (in `craft/config/general.php`), which defaults to the string "actions".
+
+For example, if your actionTrigger is set to "actions", the URL you prove to ShipStation should be:
 
 ```
-# .gitignore
-craft/plugins/oneshipstation
+https://{yourdomain.com}/actions/oneShipStation/orders/process
 ```
+
+If your actionTrigger is set to "myCustomActionTrigger", it would be:
+
+```
+https://{yourdomain.com}/myCustomActionTrigger/oneShipStation/orders/process
+```
+
+### Case Sensitivity in URL
+
+Note that this is case sensitive. Due to Craft's segment matching, the `oneShipStation` segment in the URL _must_ be `oneShipStation`, not `oneshipstation` or `ONESHIPSTATION`.
+
+
 
 ## ShipStation Configuration
 
@@ -56,17 +65,18 @@ craft/plugins/oneshipstation
 
 Once you have configured your Craft application's OneShipStation, you will need to complete the process by configuring your [ShipStation "Custom Store" integration](https://help.shipstation.com/hc/en-us/articles/205928478-ShipStation-Custom-Store-Development-Guide#3a).
 
-There, you will be required to provide a user name, password, and a URL that ShipStation will use to contact your application.
+There, you will be required to provide a user name, password, and a URL that ShipStation will use to contact your application. These can be found in the plugin settings in Craft control panel.
 
-### Custom Fields & Internal Notes
 
-Shipstation allows the addition of up to three custom fields per order. This appear to the user as `OrderCustomField1`, `OrderCustomField2`, and `OrderCustomField3` for custom fields, and `InternalNotes`.
+### Custom Fields & Order Notes
 
-You can populate these fields by ["latching on" to a Craft hook](https://craftcms.com/docs/plugins/hooks-and-events#latching-onto-hooks) in your plugin.
+Shipstation allows the addition of up to three custom fields per order. This appear to the in ShipStation as `customField1`, `customField2`, and `customField3` for custom fields; `internalNotes` and `customerNotes`; as well as `gift` and `giftMessage`.
+
+You can populate these fields by ["latching on" to a Craft hook](https://craftcms.com/docs/plugins/hooks-and-events#latching-onto-hooks) in your custom site plugin.
 
 Your plugin should return a callback that takes a single parameter `$order`, which is the order instance. It should return a single value.
 
-In this example, the plugin `MyPlugin` will send the value `my custom value` to all orders in the `OrderCustomField1`:
+In this example, the plugin `MyPlugin` will send the value `my custom value` to all orders in the `customField1` param to ShipStation:
 
 ```
 class MyPlugin extends BasePlugin {
@@ -79,7 +89,7 @@ class MyPlugin extends BasePlugin {
 }
 ```
 
-Note: OneShipStation will add a `CustomFieldX` child for each plugin that responds to the hook.
+Note: OneShipStation will add a `CustomFieldX` child for each plugin that responds to the hook. So, to avoid overlap, be sure to only use one hook.
 
 For internal notes, if a plugin responds to the hook at all, the key will be added. Respond as:
 
@@ -117,51 +127,21 @@ class MyPlugin extends BasePlugin {
 
 If you return null or void, OneShipstation will assign the shipping method to be the shipping method handle, as default.
 
-### Installation Requirements
+### Overriding Tracking URLs
 
-#### CSRF Protection
-
-If you have CSRF protection enabled in your app, you will need to disable it for when ShipStation POSTs shipment notifications.
-
-In `craft/config/general.php`, if you have `enableCsrfProtection` set to true (or, in Craft 3+, if you _don't_ have it set to false), you will need to add the following:
+Currently One ShipStation only provides links for common carriers. If your carrier is not defined, or if you want a different URL, you can override:
 
 ```
-return array(
-    //...
-    'enableCsrfProtection' => !isset($_REQUEST['p']) || $_REQUEST['p'] != '/actions/oneShipStation/orders/process'
-)
+class MyPlugin extends BasePlugin {
+    public function oneShipStation_trackingURL($shippingInfo) {
+        return 'https://mycustomlink?tracking=' . urlencode($shippingInfo->trackingNumber);
+    }
+}
 ```
 
-This will ensure that CSRF protection is enabled for all routes that are NOT the route ShipStation posts to.
+### Using OneShipStation in your Site Templates
 
-#### "Action" naming collision
-
-ShipStation and Craft have a routing collision due to their combined use of the parameter `action`.
-ShipStation sends requests using `?action=export` to read order data, and `?action=shipnotify` to update shipping data.
-This conflicts with Craft's reserved word `action` to describe an ["action request"](https://craftcms.com/docs/plugins/controllers#how-controller-actions-fit-into-routing),
-which is designed to allow for easier routing configuration.
-
-Because of this, the route given to ShipStation for their Custom Store integration _must_ begin with your Craft config's "actionTrigger" (in `craft/config/general.php`), which defaults to the string "actions".
-
-For example, if your actionTrigger is set to "actions", the URL you prove to ShipStation should be:
-
-```
-https://{yourdomain.com}/actions/oneShipStation/orders/process
-```
-
-If your actionTrigger is set to "myCustomActionTrigger", it would be:
-
-```
-https://{yourdomain.com}/myCustomActionTrigger/oneShipStation/orders/process
-```
-
-#### Case Sensitivity
-
-Note that this is case sensitive. Due to Craft's segment matching, the `oneShipStation` segment in the URL _must_ be `oneShipStation`, not `oneshipstation` or `ONESHIPSTATION`.
-
-### Miscellaneous
-
-#### Getting Tracking Information in a Template
+#### Tracking Information
 
 One ShipStation provides a helper method to add to your template to provide customers with a link to track their shipment.
 
@@ -174,12 +154,35 @@ One ShipStation provides a helper method to add to your template to provide cust
 {% endfor %}
 ```
 
-Currently One ShipStation only provides links for common carriers. If your carrier is not defined, or if you want a different URL, you can override:
+
+## Development
+
+On any Craft 2.x project, navigate to `craft/plugins` and clone the repository:
 
 ```
-class MyPlugin extends BasePlugin {
-    public function oneShipStation_trackingURL($shippingInfo) {
-        return 'https://mycustomlink?tracking=' . urlencode($shippingInfo->trackingNumber);
-    }
-}
+$ cd craft/plugins
+$ git clone git@github.com:onedesign/oneshipstation.git
 ```
+
+Be sure to add `craft/plugins/oneshipstation` to your other project's gitignore, if applicable:
+
+```
+# .gitignore
+craft/plugins/oneshipstation
+```
+
+## Bugs / Issues
+
+Submit bug reports and issues via https://github.com/onedesign/oneshipstation/issues. Please be as thorough as possible when submitting bug reports.
+
+
+## Contributing
+
+1. Fork the repo on GitHub
+2. Clone the project to your own machine
+3. Commit changes to your own branch
+4. Push your work back up to your fork
+5. Submit a Pull request so that we can review your changes
+
+NOTE: Be sure to merge the latest from "upstream" before making a pull request!
+
