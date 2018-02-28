@@ -52,6 +52,10 @@ craft/plugins/oneshipstation
 
 ## ShipStation Configuration
 
+### Order Statuses
+
+When ShipStation marks an order as shipped it calls back to Craft to update the order. This plugin assumes that there is an order status defined in Craft Commerce with the handle "shipped".
+
 ### Authentication
 
 Once you have configured your Craft application's OneShipStation, you will need to complete the process by configuring your [ShipStation "Custom Store" integration](https://help.shipstation.com/hc/en-us/articles/205928478-ShipStation-Custom-Store-Development-Guide#3a).
