@@ -5,13 +5,15 @@ Integrates Craft Commerce with [ShipStation](https://www.shipstation.com/).
 
 ## Installation
 
-1. Use composer to install this package:
+**Note: This plugin is written for Craft 2.x. It may not work in Craft 3+.**
+
+Use [composer](https://getcomposer.org/) to install this package:
 
 ```
 composer require onedesign/oneshipstation
 ```
 
-2. Go to the Craft control panel plugin page to install and configure the plugin.
+After installing with composer, go to the Craft control panel plugin page to install and configure the settings for the plugin.
 
 
 
@@ -53,9 +55,7 @@ If your actionTrigger is set to "myCustomActionTrigger", it would be:
 https://{yourdomain.com}/myCustomActionTrigger/oneShipStation/orders/process
 ```
 
-### Case Sensitivity in URL
-
-Note that this is case sensitive. Due to Craft's segment matching, the `oneShipStation` segment in the URL _must_ be `oneShipStation`, not `oneshipstation` or `ONESHIPSTATION`.
+**Note: the above URL is case sensitive**! Due to Craft's segment matching, the `oneShipStation` segment in the URL _must_ be `oneShipStation`, not `oneshipstation` or `ONESHIPSTATION`.
 
 
 
@@ -67,6 +67,26 @@ Once you have configured your Craft application's OneShipStation, you will need 
 
 There, you will be required to provide a user name, password, and a URL that ShipStation will use to contact your application. These can be found in the plugin settings in Craft control panel.
 
+
+
+## Using OneShipStation in your Site Templates
+
+### Tracking Information
+
+One ShipStation provides a helper method to add to your template to provide customers with a link to track their shipment.
+
+```
+{% for shipmentInfo in order.shippingInfo %}
+  {% set tracking = craft.oneShipStation.trackingNumberLinkHTML(shipmentInfo) %}
+  {% if tracking|length %}
+    Track shipment: {{ tracking|raw }}
+  {% endif %}
+{% endfor %}
+```
+
+
+
+## Hooks / Customizing
 
 ### Custom Fields & Order Notes
 
@@ -80,12 +100,13 @@ In this example, the plugin `MyPlugin` will send the value `my custom value` to 
 
 ```
 class MyPlugin extends BasePlugin {
-    //...
+
     public function oneShipStationCustomField1() {
         return function($order) {
             return 'my custom value';
         };
     }
+
 }
 ```
 
@@ -95,12 +116,13 @@ For internal notes, if a plugin responds to the hook at all, the key will be add
 
 ```
 class MyPlugin extends BasePlugin {
-    //...
+
     public function oneShipStationInternalNotes() {
         return function($order) {
             return 'internal notes for this order';
         };
     }
+
 }
 ```
 
@@ -114,7 +136,7 @@ you could declare a method as follows:
 
 ```
 class MyPlugin extends BasePlugin {
-    //...
+
     public function oneShipStationShippingMethod() {
         return function($order) {
             if ($order->getShippingAddress()->country == 'US') {
@@ -122,6 +144,7 @@ class MyPlugin extends BasePlugin {
             }
         }
     }
+
 }
 ```
 
@@ -133,25 +156,12 @@ Currently One ShipStation only provides links for common carriers. If your carri
 
 ```
 class MyPlugin extends BasePlugin {
+
     public function oneShipStation_trackingURL($shippingInfo) {
         return 'https://mycustomlink?tracking=' . urlencode($shippingInfo->trackingNumber);
     }
+
 }
-```
-
-### Using OneShipStation in your Site Templates
-
-#### Tracking Information
-
-One ShipStation provides a helper method to add to your template to provide customers with a link to track their shipment.
-
-```
-{% for shipmentInfo in order.shippingInfo %}
-  {% set tracking = craft.oneShipStation.trackingNumberLinkHTML(shipmentInfo) %}
-  {% if tracking|length %}
-    Track shipment: {{ tracking|raw }}
-  {% endif %}
-{% endfor %}
 ```
 
 
