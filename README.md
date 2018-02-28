@@ -70,7 +70,7 @@ There, you will be required to provide a user name, password, and a URL that Shi
 
 ### Custom Fields & Order Notes
 
-Shipstation allows the addition of up to three custom fields per order. This appear to the in ShipStation as `customField1`, `customField2`, and `customField3` for custom fields; `internalNotes` and `customerNotes`; as well as `gift` and `giftMessage`.
+Shipstation allows the adding extra data to orders. These fields appear in ShipStation as `customField1`, `customField2`, `customField3`, `internalNotes`, `customerNotes`, `gift` and `giftMessage`.
 
 You can populate these fields by ["latching on" to a Craft hook](https://craftcms.com/docs/plugins/hooks-and-events#latching-onto-hooks) in your custom site plugin.
 
