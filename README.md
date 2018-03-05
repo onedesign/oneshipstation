@@ -1,6 +1,6 @@
 # One ShipStation
 
-Integrates Craft Commerce with [ShipStation](https://www.shipstation.com/).
+Integrates Craft Commerce with [ShipStation](https://www.shipstation.com/) using the [Custom Store Integration](https://help.shipstation.com/hc/en-us/articles/205928478).
 
 
 ## Installation
