@@ -34,7 +34,7 @@ class m160106_182029_oneshipstation_AddShipmentFields extends BaseMigration
 
        //create block
        $block = new MatrixBlockTypeModel();
-       $block->handle = 'shipingInfo';
+       $block->handle = 'shippingInfo';
        $block->name   = 'Shipping Info';
        $block->setFields([
            $this->getField('Carrier', 'carrier'),
