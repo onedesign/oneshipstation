@@ -22,10 +22,11 @@ class m160106_182029_oneshipstation_AddShipmentFields extends BaseMigration
        }
 
        //next, make sure the group exists. we can't create a field unless we have a group for it to belong to
-        $groupName = craft()->plugins->getPlugin('oneShipStation')->name;
-       $group = array_shift(array_filter(craft()->fields->getAllGroups(), function($group) use ($groupName) {
+       $groupName = craft()->plugins->getPlugin('oneShipStation')->name;
+       $matchingGroup = array_filter(craft()->fields->getAllGroups(), function ($group) use ($groupName) {
            return $group->name == $groupName;
-       }));
+       });
+       $group = array_shift($matchingGroup);
        if (is_null($group)) {
            $group = new FieldGroupModel();
            $group->name = $groupName;

@@ -26,7 +26,8 @@ class m160106_195226_oneshipstation_AddShipmentFieldsToOrder extends BaseMigrati
 
                 //find or create One ShipStation tab
                 $shipstationTabName = craft()->plugins->getPlugin('oneShipStation')->name;
-                $shipstationTab = array_shift(array_filter($fieldLayout->getTabs(), function($tab) { return $tab->name == 'One ShipStation'; }));
+                $shipstationTabs = array_filter($fieldLayout->getTabs(), function($tab) { return $tab->name == 'One ShipStation'; });
+                $shipstationTab = array_shift($shipstationTabs);
 
                 //no tab found (this is most likely), so create tab and field record
                 if (!$shipstationTab) {
