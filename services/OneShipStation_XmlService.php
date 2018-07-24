@@ -340,7 +340,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                 foreach ($customFieldCallbacks as $callback) {
                     if (is_callable($callback)) {
                         $value = $callback($order);
-                        $order_xml->addChild($fieldName, substr(htmlspecialchars($value)), 0, 100);
+                        $order_xml->addChild($fieldName, substr(htmlspecialchars($value), 0, 100));
                     }
                 }
             }
