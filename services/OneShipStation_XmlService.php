@@ -341,11 +341,11 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                     if (is_callable($callback)) {
                         $value = $callback($order);
                         if (strpos($fieldName, 'CustomField') !== false) {
-                            $fieldValue = substr(htmlspecialchars($value), 0, 100);
+                            $fieldLimit = 100;
                         } else {
-                            $fieldValue = htmlspecialchars($value);
+                            $fieldLimit = 1000;
                         }
-                        $order_xml->addChild($fieldName, $fieldValue);
+                        $order_xml->addChild($fieldName, substr(htmlspecialchars($value), 0, $fieldLimit));
                     }
                 }
             }
