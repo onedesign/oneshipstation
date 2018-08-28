@@ -167,6 +167,35 @@ class MyPlugin extends BasePlugin {
 
 }
 ```
+### Customizing Order Export for ShipStation XML  
+
+When ShipStation imports orders from Craft Commerce it passes a start date and end date. By default, this plugin will poplulate the XML feed with orders where the dateOrdered field matches the requested date range. You can override the default behavior to filter by status, date updated, etc by using your own plugin to create an ElementCriteriaModel and return it.
+
+```
+class MyPlugin extends BasePlugin {
+
+    public function oneShipStationGetOrderCriteria($start_date, $end_date) 
+    {
+        $criteria = craft()->elements->getCriteria('Commerce_Order');
+
+        if (!empty($start_date) && !empty($end_date)) {
+            $criteria->updatedOn = array('and', '> ' . $start_date, '< ' . $end_date);
+        }
+
+        // null orderStatusId means the order is only a cart
+        $criteria->orderStatusId = 'not null';
+
+        // Get only the orders flagged as Received
+        $criteria->orderStatus = craft()->commerce_orderStatuses->getOrderStatusByHandle('received');
+
+        // Order the results to be consistent across pages
+        $criteria->order = 'dateOrdered asc';
+
+        return $criteria;
+    }
+
+}
+```
 
 
 ## Development

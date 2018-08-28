@@ -77,19 +77,27 @@ class Oneshipstation_OrdersController extends BaseController
      * @return SimpleXMLElement Orders XML
      */
     protected function getOrders() {
-        $criteria = craft()->elements->getCriteria('Commerce_Order');
         $start_date = $this->parseDate('start_date');
-        $end_date = $this->parseDate('end_date');
+        $end_date   = $this->parseDate('end_date');
 
-        if ($start_date && $end_date) {
-            $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
+        // Check for separate plugin method to overload search criteria
+        if ($orderCriteriaCallbacks = craft()->plugins->call('oneShipStationGetOrderCriteria', [$start_date, $end_date])) {
+            $criteria = array_shift($orderCriteriaCallbacks);
         }
 
-        // null orderStatusId means the order is only a cart
-        $criteria->orderStatusId = 'not null';
+        if (empty($criteria)) { // Default behavior            
+            $criteria = craft()->elements->getCriteria('Commerce_Order');
 
-        // Order the results to be consistent across pages
-        $criteria->order = 'dateOrdered asc';
+            if ($start_date && $end_date) {
+                $criteria->dateOrdered = array('and', '> '.$start_date, '< '.$end_date);
+            }
+
+            // null orderStatusId means the order is only a cart
+            $criteria->orderStatusId = 'not null';
+
+            // Order the results to be consistent across pages
+            $criteria->order = 'dateOrdered asc';
+        }
 
         $num_pages = $this->paginateOrders($criteria);
 

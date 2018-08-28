@@ -198,7 +198,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             'Name'       => 'couponCode',
             'Quantity'   => ['callback' => function($order) { return 1; }, 'cdata' => false],
             'UnitPrice'  => [
-                'callback' => function($order) { return number_format($order->getTotalDiscount(), 2); },
+                'callback' => function($order) { return round($order->getTotalDiscount(), 2); },
                 'cdata' => false],
             'Adjustment' => ['callback' => function($order) { return 'true'; }, 'cdata' => false],
         ];
@@ -340,7 +340,12 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
                 foreach ($customFieldCallbacks as $callback) {
                     if (is_callable($callback)) {
                         $value = $callback($order);
-                        $order_xml->addChild($fieldName, substr(htmlspecialchars($value), 0, 100));
+                        if (strpos($fieldName, 'CustomField') !== false) {
+                            $fieldLimit = 100;
+                        } else {
+                            $fieldLimit = 1000;
+                        }
+                        $order_xml->addChild($fieldName, substr(htmlspecialchars($value), 0, $fieldLimit));
                     }
                 }
             }
