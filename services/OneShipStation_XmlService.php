@@ -198,7 +198,7 @@ class OneShipStation_XmlService extends BaseApplicationComponent {
             'Name'       => 'couponCode',
             'Quantity'   => ['callback' => function($order) { return 1; }, 'cdata' => false],
             'UnitPrice'  => [
-                'callback' => function($order) { return number_format($order->getTotalDiscount(), 2); },
+                'callback' => function($order) { return round($order->getTotalDiscount(), 2); },
                 'cdata' => false],
             'Adjustment' => ['callback' => function($order) { return 'true'; }, 'cdata' => false],
         ];
